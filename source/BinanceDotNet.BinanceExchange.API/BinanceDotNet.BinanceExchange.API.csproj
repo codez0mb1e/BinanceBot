@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <Version>4.6.2.0</Version>
+    <Product>BinanceDotNet</Product>
+    <Authors>Jon Evans</Authors>
+    <Company />
+    <RepositoryUrl>https://github.com/glitch100/BinanceDotNet</RepositoryUrl>
+    <Description>Updated version of BinanceDotNet package.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="NLog" Version="4.5.9" />
+    <PackageReference Include="System.Net.Http" Version="4.3.3" />
+    <PackageReference Include="WebSocketSharp-netstandard" Version="1.0.1" />
+  </ItemGroup>
+
+</Project>

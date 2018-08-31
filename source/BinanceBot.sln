@@ -1,0 +1,48 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2003
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinanceBot.Market", "BinanceBot.Market\BinanceBot.Market.csproj", "{AD93580C-2CEC-4695-89E7-2029F6E44D32}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinanceBot.MarketBot.Console", "BinanceBot.MarketBot.Console\BinanceBot.MarketBot.Console.csproj", "{F2327623-18BC-4176-AA9C-D7A5F1A0255D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinanceBot.MarketViewer.Console", "BinanceBot.MarketViewer.Console\BinanceBot.MarketViewer.Console.csproj", "{7912A437-0EC4-4939-B244-9379927AB0D1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinanceDotNet.BinanceExchange.API", "BinanceDotNet.BinanceExchange.API\BinanceDotNet.BinanceExchange.API.csproj", "{BA22A332-5DFE-4D7D-A685-397183314178}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B6FD43FF-5A63-4978-8444-5F06FCB9C5C0}"
+	ProjectSection(SolutionItems) = preProject
+		..\README.md = ..\README.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AD93580C-2CEC-4695-89E7-2029F6E44D32}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD93580C-2CEC-4695-89E7-2029F6E44D32}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD93580C-2CEC-4695-89E7-2029F6E44D32}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD93580C-2CEC-4695-89E7-2029F6E44D32}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2327623-18BC-4176-AA9C-D7A5F1A0255D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2327623-18BC-4176-AA9C-D7A5F1A0255D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2327623-18BC-4176-AA9C-D7A5F1A0255D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2327623-18BC-4176-AA9C-D7A5F1A0255D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7912A437-0EC4-4939-B244-9379927AB0D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7912A437-0EC4-4939-B244-9379927AB0D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7912A437-0EC4-4939-B244-9379927AB0D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7912A437-0EC4-4939-B244-9379927AB0D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA22A332-5DFE-4D7D-A685-397183314178}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA22A332-5DFE-4D7D-A685-397183314178}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA22A332-5DFE-4D7D-A685-397183314178}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA22A332-5DFE-4D7D-A685-397183314178}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {743FF889-DA4B-4AED-A0B8-6559562BA95F}
+	EndGlobalSection
+EndGlobal

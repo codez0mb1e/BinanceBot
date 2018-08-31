@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <Version>0.1.0</Version>
+    <Copyright>(c) 2018, Dmitry Petukhov.</Copyright>
+    <PackageProjectUrl>http://0xcode.in</PackageProjectUrl>
+    <Authors>Dmitry Petukhov</Authors>
+    <Company />
+    <Product>BinanceBot</Product>
+    <RepositoryUrl>https://github.com/codez0mb1e/BinanceBot</RepositoryUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BinanceDotNet.BinanceExchange.API\BinanceDotNet.BinanceExchange.API.csproj" />
+  </ItemGroup>
+
+</Project>
