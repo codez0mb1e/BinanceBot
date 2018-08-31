@@ -9,7 +9,8 @@ namespace BinanceBot.Market
     {
         public MarketDepthPair(Quote ask, Quote bid, long updateTime)
         {
-            if (updateTime <= 0) throw new ArgumentOutOfRangeException(nameof(updateTime));
+            if (updateTime <= 0)
+                throw new ArgumentOutOfRangeException(nameof(updateTime));
 
             Ask = ask;
             Bid = bid;

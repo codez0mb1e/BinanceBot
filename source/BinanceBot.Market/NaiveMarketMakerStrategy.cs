@@ -37,25 +37,32 @@ namespace BinanceBot.Market
 
             Quote quote = null;
 
-            // spread in percentage points: spread_in_pp = spread/price * 100
-            decimal spreadInPP = marketPair.PriceSpread.Value / marketPair.MediumPrice.Value * 100;
 
             _logger.Info($"Best ask / bid: {marketPair.Ask.Price} / {marketPair.Bid.Price}. Update Id: {marketPair.UpdateTime}.");
-            _logger.Info($"Spread absolute / relative: {marketPair.PriceSpread} / {spreadInPP:F3}%. Update Id: {marketPair.UpdateTime}.");
 
-            if (spreadInPP >= _marketStrategyConfig.TradeWhenSpreadGreaterThan)
+            // get price spreads (in percent)
+            decimal actualSpread = marketPair.PriceSpread.Value / marketPair.MediumPrice.Value * 100; // spread_relative = spread_absolute/price * 100
+            decimal expectedSpread = _marketStrategyConfig.TradeWhenSpreadGreaterThan;
+
+            _logger.Info($"Spread absolute / relative: {marketPair.PriceSpread} / {actualSpread:F3}%. Update Id: {marketPair.UpdateTime}.");
+
+
+            if (actualSpread >= expectedSpread)
             {
-                // compute order price
-                decimal orderPrice = marketPair.Bid.Price + marketPair.MediumPrice.Value * _marketStrategyConfig.TradeWhenSpreadGreaterThan / 100;
+                // compute new order price
+                decimal extra = marketPair.MediumPrice.Value * (actualSpread - expectedSpread) / 100; // extra = medium_price * (spread_actual - spread_expected)
+                decimal orderPrice = marketPair.Bid.Price + extra; // new_price = best_bid + extra
 
                 // compute order volume
-                decimal orderVolume = marketPair.VolumeSpread.Value > _marketStrategyConfig.MaxOrderVolume
+                decimal volumeSpread = marketPair.VolumeSpread.Value;
+                decimal orderVolume = volumeSpread > _marketStrategyConfig.MaxOrderVolume
                     ? _marketStrategyConfig.MaxOrderVolume // set max volume
-                    : (marketPair.VolumeSpread.Value < _marketStrategyConfig.MinOrderVolume
+                    : (volumeSpread < _marketStrategyConfig.MinOrderVolume
                         ? _marketStrategyConfig.MinOrderVolume // set min volume
-                        : marketPair.VolumeSpread.Value);
+                        : volumeSpread);
 
-                // return price-volume pair
+
+                // return new price-volume pair
                 quote = new Quote(orderPrice, orderVolume, OrderSide.Buy); 
             }
 
