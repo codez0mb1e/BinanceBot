@@ -2,12 +2,12 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
-    <Version>0.1.0</Version>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Version>0.2.0</Version>
     <Authors>Dmitry Petukhov</Authors>
     <Product>BinanceBot</Product>
-    <Copyright>(c) 2018, Dmitry Petukhov.</Copyright>
-    <PackageProjectUrl>http://0xcode.in</PackageProjectUrl>
+    <Copyright>(c) 2020, Dmitry Petukhov.</Copyright>
+    <PackageProjectUrl>http://0xcode.in/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/codez0mb1e/BinanceBot</RepositoryUrl>
   </PropertyGroup>
 
@@ -16,8 +16,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NLog" Version="4.5.9" />
-    <PackageReference Include="NLog.Config" Version="4.5.9" />
+    <PackageReference Include="NLog" Version="4.7.5" />
+    <PackageReference Include="NLog.Config" Version="4.7.5" />
   </ItemGroup>
 
   <ItemGroup>

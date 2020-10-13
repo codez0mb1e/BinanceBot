@@ -1,4 +1,5 @@
-# Binance Bot
+# Market Bot for Binance Exchange
+
 _Naive Market Maker Bot for Binance._
 
 Solution contains two console projects:
@@ -17,28 +18,35 @@ to _create real order_ in order book.
 
 
 ## Roadmap
+
 #### Throlling
+
 Binance has numerous limits to requests, orders count, min/max volume of order, etc. The networks restrictions should be taken into BinanceBot working as part of `BinanceClientConfiguration`, 
 and the orders restrictions - as part of `MarkerStrategyConfiguration`.
 
 #### Security
+
 Binance API keys should be stored in secured storage (such as `Azure Key Vault` service) instead of plain text such it is now.
 
 #### Configurations
+
 Any configuration (of connectors or bot) should be placed in separate configuration storage (such as `JSON files` in local file system).
 This will allow you to reconfigure the bot without the need for recompilation.
 
 #### Other
+
 BinanceBot doesn’t processed network connection errors. 
 It would be to implement `Retry Policies` for the broken connections and handling other network errors. 
 
 The solution doesn’t contain any `Unit Tests`/`Integration Tests`, which is a bad practice. 
 
 ## Requirements
-__.NET Core 2.1__ (also compatible with .NET 4.5.1, .NET 4.5.2, .NET 4.6.1, .NETSTANDARD2.0).
+
+- .NET Core 3.1.
 
 
 ## References
+
 1. [Binance official API docs](https://github.com/binance-exchange/binance-official-api-docs).
 2. [Official C# Wrapper for the Binance exchange API](https://github.com/glitch100/BinanceDotNet).
 
