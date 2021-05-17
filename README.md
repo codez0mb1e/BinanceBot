@@ -5,7 +5,7 @@ Naive _Market Maker Bot_ for Binance.
 Solution contains two console projects:
 
 - The `BinanceBot.MarketViewer.Console` project: __Order book updating in near-real time__ (via _Binance WebSocket API_). 
-- The `BinanceBot.MarketBot.Console` project: __create and cancel orders)) (via _Binance REST API_) depends on current Market Depth.
+- The `BinanceBot.MarketBot.Console` project: __Create and cancel orders__ (via _Binance REST API_) depends on current Market Depth.
 
 Most of the `BinanceDotNet.BinanceExchange.API` project was taken from BinanceDotNet project [[2](#references)], but BinanceBot solution is not a branch of BinanceDotNet project.
 
