@@ -1,10 +1,11 @@
 # Market Bot for Binance Exchange
 
-_Naive Market Maker Bot for Binance._
+Naive _Market Maker Bot_ for Binance.
 
 Solution contains two console projects:
-- The `BinanceBot.MarketViewer.Console` project demonstrates Order Book updating in near-real time (via _Binance WebSocket API_). 
-- The `BinanceBot.MarketBot.Console` project demonstrates how BinanceBot create and cancel orders (via _Binance REST API_) depends on current Market Depth.
+
+- The `BinanceBot.MarketViewer.Console` project: __Order book updating in near-real time__ (via _Binance WebSocket API_). 
+- The `BinanceBot.MarketBot.Console` project: __create and cancel orders)) (via _Binance REST API_) depends on current Market Depth.
 
 Most of the `BinanceDotNet.BinanceExchange.API` project was taken from BinanceDotNet project [[2](#references)], but BinanceBot solution is not a branch of BinanceDotNet project.
 
@@ -42,7 +43,7 @@ The solution doesn’t contain any `Unit Tests`/`Integration Tests`, which is a 
 
 ## Requirements
 
-- .NET Core 3.1.
+- .NET Core 5.0.
 
 
 ## References
