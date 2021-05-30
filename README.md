@@ -14,7 +14,7 @@ In picture below _BinanceBot create order to Order Book only if price spread by 
 ![alt text][binance_bot_running]
 
 __Warn:__ BinanceBot uses _test order create_  API by default (without real order creation). 
-Turn off `TEST_ORDER_CREATION_MODE` compilation symbol in [MarketMakerBot.cs](source/BinanceBot.Market/MarketMakerBot.cs) 
+Turn off `TEST_ORDER_CREATION_MODE` compilation symbol in [MarketMakerBot.cs](src/BinanceBot.Market/MarketMakerBot.cs) 
 to _create real order_ in order book.
 
 
