@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using BinanceExchange.API.Models.Request;
-using BinanceExchange.API.Models.Response;
+using Binance.Net.Objects.Spot.SpotData;
 using NLog;
 
 namespace BinanceBot.Market
@@ -37,11 +36,11 @@ namespace BinanceBot.Market
 
         public abstract Task ValidateConnectionAsync();
 
-        public abstract Task<IEnumerable<OrderResponse>> GetOpenedOrdersAsync(string symbol);
+        public abstract Task<IEnumerable<BinanceOrder>> GetOpenedOrdersAsync(string symbol);
 
-        public abstract Task CancelOrdersAsync(IEnumerable<OrderResponse> orders);
+        public abstract Task CancelOrdersAsync(IEnumerable<BinanceOrder> orders);
 
-        public abstract Task<BaseCreateOrderResponse> CreateOrderAsync(CreateOrderRequest order);
+        public abstract Task<BinancePlacedOrder> CreateOrderAsync(CreateOrderRequest order);
 
         
         public abstract void Dispose();

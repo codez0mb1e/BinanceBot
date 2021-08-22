@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
-using BinanceExchange.API.Client;
-using BinanceExchange.API.Models.Response;
-using BinanceExchange.API.Websockets;
+using Binance.Net.Interfaces;
+using Binance.Net.Objects.Spot.MarketData;
+using CryptoExchange.Net.Objects;
+
 
 namespace BinanceBot.Market
 {
@@ -25,8 +27,8 @@ namespace BinanceBot.Market
     /// </remarks>
     public class MarketDepthManager
     {
-        private readonly IBinanceRestClient _restClient;
-        private readonly IBinanceWebSocketClient _webSocketClient;
+        private readonly IBinanceClient _restClient;
+        private readonly IBinanceSocketClient _webSocketClient;
 
 
         /// <summary>
@@ -36,7 +38,7 @@ namespace BinanceBot.Market
         /// <param name="webSocketClient">Binance WebSocket client</param>
         /// <exception cref="ArgumentNullException"><paramref name="binanceRestClient"/> cannot be <see langword="null"/></exception>
         /// <exception cref="ArgumentNullException"><paramref name="webSocketClient"/> cannot be <see langword="null"/></exception>
-        public MarketDepthManager(IBinanceRestClient binanceRestClient, IBinanceWebSocketClient webSocketClient)
+        public MarketDepthManager(IBinanceClient binanceRestClient, IBinanceSocketClient webSocketClient)
         {
             _restClient = binanceRestClient ?? throw new ArgumentNullException(nameof(binanceRestClient));
             _webSocketClient = webSocketClient ?? throw new ArgumentNullException(nameof(webSocketClient));
@@ -55,7 +57,8 @@ namespace BinanceBot.Market
             if (limit <= 0)
                 throw new ArgumentOutOfRangeException(nameof(limit));
 
-            OrderBookResponse orderBook = await _restClient.GetOrderBookAsync(marketDepth.Symbol, false, limit);
+            WebCallResult<BinanceOrderBook> response = await _restClient.Spot.Market.GetOrderBookAsync(marketDepth.Symbol, limit);
+            BinanceOrderBook orderBook = response.Data;
 
             marketDepth.UpdateDepth(orderBook.Asks, orderBook.Bids, orderBook.LastUpdateId);
         }
@@ -70,9 +73,10 @@ namespace BinanceBot.Market
             if (marketDepth == null)
                 throw new ArgumentNullException(nameof(marketDepth));
 
-            _webSocketClient.ConnectToDepthWebSocket(
+            _webSocketClient.Spot.SubscribeToOrderBookUpdatesAsync(
                 marketDepth.Symbol,
-                marketData => marketDepth.UpdateDepth(marketData.AskDepthDeltas, marketData.BidDepthDeltas, marketData.UpdateId));
+                1000, 
+                marketData => marketDepth.UpdateDepth(marketData.Data.Asks, marketData.Data.Bids, marketData.Data.LastUpdateId));
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using BinanceExchange.API.Enums;
+using Binance.Net.Enums;
 
 namespace BinanceBot.Market.Utility
 {

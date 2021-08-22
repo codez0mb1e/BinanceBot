@@ -1,5 +1,5 @@
 ﻿using System;
-using BinanceExchange.API.Enums;
+using Binance.Net.Enums;
 using NLog;
 
 
