@@ -1,17 +1,20 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Binance.Net;
+using Binance.Net.Interfaces;
+using Binance.Net.Objects;
 using BinanceBot.Market;
-using BinanceExchange.API.Client;
-
-using BinanceExchange.API.Models.Response;
-using BinanceExchange.API.Websockets;
+using CryptoExchange.Net.Authentication;
 using Newtonsoft.Json;
 
 namespace BinanceBot.MarketViewer.Console
 {
     public class Program
     {
+        private const string Key = "";
+        private const string Secret = "";
+
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
 
@@ -19,10 +22,9 @@ namespace BinanceBot.MarketViewer.Console
         {
             const string token = "ETHBTC";
 
-            IBinanceRestClient binanceRestClient = new BinanceRestClient(new BinanceClientConfiguration
+            IBinanceClient binanceRestClient = new BinanceClient(new BinanceClientOptions()
             {
-                ApiKey = "<your_api_key>",
-                SecretKey = "<your_secret_key>"
+                ApiCredentials = new ApiCredentials(Key, Secret)
             });
 
 
@@ -53,7 +55,10 @@ namespace BinanceBot.MarketViewer.Console
             };
 
 
-            var marketDepthManager = new MarketDepthManager(binanceRestClient, new BinanceWebSocketClient(binanceRestClient, Logger));
+            IBinanceSocketClient binanceSocketClient = new BinanceSocketClient(new BinanceSocketClientOptions());
+            binanceSocketClient.SetApiCredentials(Key, Secret);
+
+            var marketDepthManager = new MarketDepthManager(binanceRestClient, binanceSocketClient);
 
             // build order book
             await marketDepthManager.BuildAsync(marketDepth);
@@ -67,15 +72,16 @@ namespace BinanceBot.MarketViewer.Console
 
 
 
-        private static async Task TestConnection(IBinanceRestClient binanceRestClient)
+        private static async Task TestConnection(IBinanceClient binanceRestClient)
         {
             Logger.Info("Testing connection...");
-            IResponse testConnectResponse = await binanceRestClient.TestConnectivityAsync();
-            if (testConnectResponse != null)
-            {
-                ServerTimeResponse serverTimeResponse = await binanceRestClient.GetServerTimeAsync();
-                Logger.Info($"Connection is established. Approximate ping time: {DateTime.UtcNow.Subtract(serverTimeResponse.ServerTime).TotalMilliseconds:F0} ms");
-            }
+
+            var testConnectResponse = await binanceRestClient.PingAsync();
+            DateTime serverTimeResponse = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                .AddMilliseconds(testConnectResponse.Data / 10.0)
+                .ToLocalTime();
+
+            Logger.Info($"Connection was established successfully. Approximate ping time: {DateTime.UtcNow.Subtract(serverTimeResponse).TotalMilliseconds:F0} ms");
         }
     }
 }

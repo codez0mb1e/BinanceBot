@@ -1,14 +1,18 @@
 ﻿using System.Threading.Tasks;
-
+using Binance.Net;
+using Binance.Net.Interfaces;
+using Binance.Net.Objects;
 using BinanceBot.Market;
-using BinanceExchange.API.Client;
-using BinanceExchange.API.Websockets;
+using CryptoExchange.Net.Authentication;
 
 
 namespace BinanceBot.MarketBot.Console
 {
     public class Program
     {
+        private const string Key = "";
+        private const string Secret = "";
+
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
 
@@ -17,26 +21,28 @@ namespace BinanceBot.MarketBot.Console
             // set bot settings
             const string token = "ETHBTC";
 
-            IBinanceRestClient binanceRestClient = new BinanceRestClient(new BinanceClientConfiguration
+            IBinanceClient binanceRestClient = new BinanceClient(new BinanceClientOptions()
             {
-                ApiKey = "<your_api_key>", 
-                SecretKey = "<your_secret_key>"
+                ApiCredentials = new ApiCredentials(Key, Secret)
             });
 
             var strategyConfig = new MarketStrategyConfiguration
             {
-                MinOrderVolume = 1.0M,
-                MaxOrderVolume = 50.0M,
-                TradeWhenSpreadGreaterThan = .02M
+                MinOrderVolume = 0.0001M,
+                MaxOrderVolume = 0.001M,
+                TradeWhenSpreadGreaterThan = .001M
             };
 
 
             // create bot
+            IBinanceSocketClient binanceSocketClient = new BinanceSocketClient(new BinanceSocketClientOptions());
+            binanceSocketClient.SetApiCredentials(Key, Secret);
+
             IMarketBot bot = new MarketMakerBot(
                 token,
                 new NaiveMarketMakerStrategy(strategyConfig, Logger),
                 binanceRestClient,
-                new BinanceWebSocketClient(binanceRestClient, Logger),
+                binanceSocketClient,
                 Logger);
 
 
