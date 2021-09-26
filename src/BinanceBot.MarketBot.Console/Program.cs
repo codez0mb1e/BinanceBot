@@ -5,21 +5,24 @@ using Binance.Net.Objects;
 using BinanceBot.Market;
 using CryptoExchange.Net.Authentication;
 
+using static System.Console;
+
 
 namespace BinanceBot.MarketBot.Console
 {
     public class Program
     {
-        private const string Key = "";
-        private const string Secret = "";
+        // WARN: Set your credentials here here 
+        private const string Key = "******";
+        private const string Secret = "*****";
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
 
-        public static async Task Main(string[] args)
+        static async Task Main(string[] args)
         {
             // set bot settings
-            const string token = "ETHBTC";
+            const string token = "ETHBTC"; // WARN: Set necessary token here
 
             IBinanceClient binanceRestClient = new BinanceClient(new BinanceClientOptions()
             {
@@ -51,16 +54,16 @@ namespace BinanceBot.MarketBot.Console
             {
                 await bot.RunAsync();
 
-                System.Console.WriteLine("Press Enter to stop bot...");
-                System.Console.ReadLine();
+                WriteLine("Press Enter to stop bot...");
+                ReadLine();
             }
             finally
             {
                 bot.Stop();
             }
            
-            System.Console.WriteLine("Press Enter to exit...");
-            System.Console.ReadLine();
+            WriteLine("Press Enter to exit...");
+            ReadLine();
         }   
     }
 }

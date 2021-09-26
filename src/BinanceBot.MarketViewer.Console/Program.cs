@@ -8,19 +8,23 @@ using BinanceBot.Market;
 using CryptoExchange.Net.Authentication;
 using Newtonsoft.Json;
 
+using static System.Console;
+
+
 namespace BinanceBot.MarketViewer.Console
 {
     public class Program
     {
-        private const string Key = "";
-        private const string Secret = "";
+        // WARN: Set your credentials here here 
+        private const string Key = "******";
+        private const string Secret = "*****";
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
 
-        public static async Task Main(string[] args)
+        static async Task Main(string[] args)
         {
-            const string token = "ETHBTC";
+            const string token = "ETHBTC"; // WARN: Set necessary token here
 
             IBinanceClient binanceRestClient = new BinanceClient(new BinanceClientOptions()
             {
@@ -36,10 +40,11 @@ namespace BinanceBot.MarketViewer.Console
             {
                 int n = 20;
 
-                System.Console.Clear();
+                Clear();
 
-                System.Console.WriteLine("Price : Volume");
-                System.Console.WriteLine(
+                WriteLine("Price : Volume");
+
+                WriteLine(
                     JsonConvert.SerializeObject(
                         new
                         {
@@ -49,9 +54,9 @@ namespace BinanceBot.MarketViewer.Console
                         }, 
                         Formatting.Indented));
 
-                System.Console.WriteLine("Press Enter to stop streaming market depth...");
+                WriteLine("Press Enter to stop streaming market depth...");
 
-                System.Console.SetCursorPosition(0, 0);
+                SetCursorPosition(0, 0);
             };
 
 
@@ -66,8 +71,8 @@ namespace BinanceBot.MarketViewer.Console
             marketDepthManager.StreamUpdates(marketDepth);
 
 
-            System.Console.WriteLine("Press Enter to exit...");
-            System.Console.ReadLine();
+            WriteLine("Press Enter to exit...");
+            ReadLine();
         }
 
 
