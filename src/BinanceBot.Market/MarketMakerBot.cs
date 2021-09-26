@@ -1,5 +1,4 @@
-﻿// Create test order flag. See more: https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md#test-new-order-trade 
-#define TEST_ORDER_CREATION_MODE 
+﻿#define TEST_ORDER_CREATION_MODE // Test order flag. See details: https://github.com/binance/binance-spot-api-docs/blob/master/rest-api.md#test-new-order-trade
 
 using System;
 using System.Collections.Generic;
