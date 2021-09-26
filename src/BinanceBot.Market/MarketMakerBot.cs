@@ -1,16 +1,12 @@
-﻿// Create test order flag. See more: https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md#test-new-order-trade 
-#define TEST_ORDER_CREATION_MODE 
+﻿#define TEST_ORDER_CREATION_MODE // Test order flag. See details: https://github.com/binance/binance-spot-api-docs/blob/master/rest-api.md#test-new-order-trade
 
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-
-using BinanceExchange.API.Client;
-using BinanceExchange.API.Enums;
-using BinanceExchange.API.Models.Request;
-using BinanceExchange.API.Models.Response;
-using BinanceExchange.API.Websockets;
-
+using Binance.Net.Enums;
+using Binance.Net.Interfaces;
+using Binance.Net.Objects.Spot.SpotData;
+using CryptoExchange.Net.Objects;
 using NLog;
 
 
@@ -21,8 +17,8 @@ namespace BinanceBot.Market
     /// </summary>
     public class MarketMakerBot : BaseMarketBot<NaiveMarketMakerStrategy>
     {
-        private readonly IBinanceRestClient _binanceRestClient;
-        private readonly IBinanceWebSocketClient _webSocketClient;
+        private readonly IBinanceClient _binanceRestClient;
+        private readonly IBinanceSocketClient _webSocketClient;
         private readonly MarketDepth _marketDepth;
 
 
@@ -38,8 +34,8 @@ namespace BinanceBot.Market
         public MarketMakerBot(
             string symbol,
             NaiveMarketMakerStrategy marketStrategy,
-            IBinanceRestClient binanceRestClient,
-            IBinanceWebSocketClient webSocketClient,
+            IBinanceClient binanceRestClient,
+            IBinanceSocketClient webSocketClient,
             Logger logger) :
             base(symbol, marketStrategy, logger)
         {
@@ -53,43 +49,60 @@ namespace BinanceBot.Market
         public override async Task ValidateConnectionAsync()
         {
             Logger.Info("Testing connection...");
-            IResponse testConnectResponse = await _binanceRestClient.TestConnectivityAsync();
-            if (testConnectResponse != null)
+
+            CallResult<long> testConnectResponse = await _binanceRestClient.PingAsync().ConfigureAwait(false);
+            
+            if (testConnectResponse.Error != null) 
+                Logger.Error(testConnectResponse.Error.Message);
+            else
             {
-                ServerTimeResponse serverTimeResponse = await _binanceRestClient.GetServerTimeAsync();
-                Logger.Info($"Connection was established successfully. Approximate ping time: {DateTime.UtcNow.Subtract(serverTimeResponse.ServerTime).TotalMilliseconds:F0} ms");
+                DateTime serverTimeResponse = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                    .AddMilliseconds(testConnectResponse.Data/10.0)
+                    .ToLocalTime();
+
+                Logger.Info($"Connection was established successfully. Approximate ping time: {DateTime.UtcNow.Subtract(serverTimeResponse).TotalMilliseconds:F0} ms");
             }
         }
 
 
-        public override async Task<IEnumerable<OrderResponse>> GetOpenedOrdersAsync(string symbol)
+        public override async Task<IEnumerable<BinanceOrder>> GetOpenedOrdersAsync(string symbol)
         {
             if (string.IsNullOrEmpty(symbol))
                 throw new ArgumentException("Invalid symbol value", nameof(symbol));
 
-            return await _binanceRestClient.GetCurrentOpenOrdersAsync(new CurrentOpenOrdersRequest { Symbol = symbol });
+            var response = await _binanceRestClient.Spot.Order.GetOpenOrdersAsync(symbol).ConfigureAwait(false);
+            return response.Data;
         }
 
 
-        public override async Task CancelOrdersAsync(IEnumerable<OrderResponse> orders)
+        public override async Task CancelOrdersAsync(IEnumerable<BinanceOrder> orders)
         {
             if (orders == null)
                 throw new ArgumentNullException(nameof(orders));
 
-            foreach (OrderResponse order in orders)
-                await _binanceRestClient.CancelOrderAsync(new CancelOrderRequest { OrderId = order.OrderId, OriginalClientOrderId = order.ClientOrderId, Symbol = order.Symbol });
+            foreach (var order in orders)
+                await _binanceRestClient.Spot.Order.CancelOrderAsync(orderId: order.OrderId, origClientOrderId: order.ClientOrderId, symbol: order.Symbol).ConfigureAwait(false);
         }
 
 
-        public override async Task<BaseCreateOrderResponse> CreateOrderAsync(CreateOrderRequest order)
+        public override async Task<BinancePlacedOrder> CreateOrderAsync(CreateOrderRequest order)
         {
 
 #if TEST_ORDER_CREATION_MODE
-            EmptyResponse response = await _binanceRestClient.CreateTestOrderAsync(order);
-            return response != null ? new AcknowledgeCreateOrderResponse() : null;
+            WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.Spot.Order.PlaceTestOrderAsync(
+                order.Symbol, order.Side, order.Type, order.Quantity,
+                newClientOrderId:order.NewClientOrderId, 
+                receiveWindow:order.RecvWindow)
+                .ConfigureAwait(false);
 #else
-            return await _binanceRestClient.CreateOrderAsync(order);
+            WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.Spot.Order.PlaceOrderAsync(
+                    order.Symbol, order.Side, order.Type, order.Quantity,
+                    newClientOrderId: order.NewClientOrderId,
+                    receiveWindow: order.RecvWindow)
+                .ConfigureAwait(false);
 #endif
+
+            return response.Data;
         }
 
 
@@ -122,7 +135,7 @@ namespace BinanceBot.Market
             var openOrdersResponse = await GetOpenedOrdersAsync(Symbol);
 
             // cancel already opened orders (if necessary)
-            await CancelOrdersAsync(openOrdersResponse);
+            if (openOrdersResponse != null) await CancelOrdersAsync(openOrdersResponse);
 
             // find new market position
             Quote q = MarketStrategy.Process(e.MarketBestPair);
@@ -136,7 +149,7 @@ namespace BinanceBot.Market
                     Price = q.Price,
                     Side = q.Direction,
                     Type = OrderType.Limit,
-                    TimeInForce = TimeInForce.GTC // 'Good Till Cancelled' marketStrategy 
+                    TimeInForce = TimeInForce.GoodTillCancel // 'Good Till Cancelled' marketStrategy 
                 };
 
                 await CreateOrderAsync(newOrderRequest);

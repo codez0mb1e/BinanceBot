@@ -1,42 +1,51 @@
 ﻿using System.Threading.Tasks;
-
+using Binance.Net;
+using Binance.Net.Interfaces;
+using Binance.Net.Objects;
 using BinanceBot.Market;
-using BinanceExchange.API.Client;
-using BinanceExchange.API.Websockets;
+using CryptoExchange.Net.Authentication;
+
+using static System.Console;
 
 
 namespace BinanceBot.MarketBot.Console
 {
     public class Program
     {
+        // WARN: Set your credentials here here 
+        private const string Key = "******";
+        private const string Secret = "*****";
+
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
 
-        public static async Task Main(string[] args)
+        static async Task Main(string[] args)
         {
             // set bot settings
-            const string token = "ETHBTC";
+            const string token = "ETHBTC"; // WARN: Set necessary token here
 
-            IBinanceRestClient binanceRestClient = new BinanceRestClient(new BinanceClientConfiguration
+            IBinanceClient binanceRestClient = new BinanceClient(new BinanceClientOptions()
             {
-                ApiKey = "<your_api_key>", 
-                SecretKey = "<your_secret_key>"
+                ApiCredentials = new ApiCredentials(Key, Secret)
             });
 
             var strategyConfig = new MarketStrategyConfiguration
             {
-                MinOrderVolume = 1.0M,
-                MaxOrderVolume = 50.0M,
-                TradeWhenSpreadGreaterThan = .02M
+                MinOrderVolume = 0.0001M,
+                MaxOrderVolume = 0.001M,
+                TradeWhenSpreadGreaterThan = .001M
             };
 
 
             // create bot
+            IBinanceSocketClient binanceSocketClient = new BinanceSocketClient(new BinanceSocketClientOptions());
+            binanceSocketClient.SetApiCredentials(Key, Secret);
+
             IMarketBot bot = new MarketMakerBot(
                 token,
                 new NaiveMarketMakerStrategy(strategyConfig, Logger),
                 binanceRestClient,
-                new BinanceWebSocketClient(binanceRestClient, Logger),
+                binanceSocketClient,
                 Logger);
 
 
@@ -45,16 +54,16 @@ namespace BinanceBot.MarketBot.Console
             {
                 await bot.RunAsync();
 
-                System.Console.WriteLine("Press Enter to stop bot...");
-                System.Console.ReadLine();
+                WriteLine("Press Enter to stop bot...");
+                ReadLine();
             }
             finally
             {
                 bot.Stop();
             }
            
-            System.Console.WriteLine("Press Enter to exit...");
-            System.Console.ReadLine();
+            WriteLine("Press Enter to exit...");
+            ReadLine();
         }   
     }
 }

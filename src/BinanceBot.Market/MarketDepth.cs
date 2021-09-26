@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Binance.Net.Enums;
+using Binance.Net.Objects;
 using BinanceBot.Market.Utility;
-using BinanceExchange.API.Enums;
-using BinanceExchange.API.Models.Response;
+
 
 namespace BinanceBot.Market
 {
@@ -76,7 +77,7 @@ namespace BinanceBot.Market
         /// <summary>
         /// Update market depth
         /// </summary>
-        public void UpdateDepth(IEnumerable<TradeResponse> asks, IEnumerable<TradeResponse> bids, long updateTime)
+        public void UpdateDepth(IEnumerable<BinanceOrderBookEntry> asks, IEnumerable<BinanceOrderBookEntry> bids, long updateTime)
         {
             if (updateTime <= 0)
                 throw new ArgumentOutOfRangeException(nameof(updateTime));
@@ -86,11 +87,11 @@ namespace BinanceBot.Market
             if (asks == null && bids == null) return;
 
 
-            void UpdateOrderBook(IEnumerable<TradeResponse> updates, IDictionary<decimal, decimal> orders)
+            void UpdateOrderBook(IEnumerable<BinanceOrderBookEntry> updates, IDictionary<decimal, decimal> orders)
             {
                 if (updates != null)
                 {
-                    foreach (TradeResponse t in updates)
+                    foreach (BinanceOrderBookEntry t in updates)
                     {
                         if (t.Quantity != IgnoreVolumeValue)
                             orders[t.Price] = t.Quantity;

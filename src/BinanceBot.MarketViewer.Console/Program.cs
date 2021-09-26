@@ -1,28 +1,34 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Binance.Net;
+using Binance.Net.Interfaces;
+using Binance.Net.Objects;
 using BinanceBot.Market;
-using BinanceExchange.API.Client;
-
-using BinanceExchange.API.Models.Response;
-using BinanceExchange.API.Websockets;
+using CryptoExchange.Net.Authentication;
 using Newtonsoft.Json;
+
+using static System.Console;
+
 
 namespace BinanceBot.MarketViewer.Console
 {
     public class Program
     {
+        // WARN: Set your credentials here here 
+        private const string Key = "******";
+        private const string Secret = "*****";
+
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
 
-        public static async Task Main(string[] args)
+        static async Task Main(string[] args)
         {
-            const string token = "ETHBTC";
+            const string token = "ETHBTC"; // WARN: Set necessary token here
 
-            IBinanceRestClient binanceRestClient = new BinanceRestClient(new BinanceClientConfiguration
+            IBinanceClient binanceRestClient = new BinanceClient(new BinanceClientOptions()
             {
-                ApiKey = "<your_api_key>",
-                SecretKey = "<your_secret_key>"
+                ApiCredentials = new ApiCredentials(Key, Secret)
             });
 
 
@@ -34,10 +40,11 @@ namespace BinanceBot.MarketViewer.Console
             {
                 int n = 20;
 
-                System.Console.Clear();
+                Clear();
 
-                System.Console.WriteLine("Price : Volume");
-                System.Console.WriteLine(
+                WriteLine("Price : Volume");
+
+                WriteLine(
                     JsonConvert.SerializeObject(
                         new
                         {
@@ -47,13 +54,16 @@ namespace BinanceBot.MarketViewer.Console
                         }, 
                         Formatting.Indented));
 
-                System.Console.WriteLine("Press Enter to stop streaming market depth...");
+                WriteLine("Press Enter to stop streaming market depth...");
 
-                System.Console.SetCursorPosition(0, 0);
+                SetCursorPosition(0, 0);
             };
 
 
-            var marketDepthManager = new MarketDepthManager(binanceRestClient, new BinanceWebSocketClient(binanceRestClient, Logger));
+            IBinanceSocketClient binanceSocketClient = new BinanceSocketClient(new BinanceSocketClientOptions());
+            binanceSocketClient.SetApiCredentials(Key, Secret);
+
+            var marketDepthManager = new MarketDepthManager(binanceRestClient, binanceSocketClient);
 
             // build order book
             await marketDepthManager.BuildAsync(marketDepth);
@@ -61,21 +71,22 @@ namespace BinanceBot.MarketViewer.Console
             marketDepthManager.StreamUpdates(marketDepth);
 
 
-            System.Console.WriteLine("Press Enter to exit...");
-            System.Console.ReadLine();
+            WriteLine("Press Enter to exit...");
+            ReadLine();
         }
 
 
 
-        private static async Task TestConnection(IBinanceRestClient binanceRestClient)
+        private static async Task TestConnection(IBinanceClient binanceRestClient)
         {
             Logger.Info("Testing connection...");
-            IResponse testConnectResponse = await binanceRestClient.TestConnectivityAsync();
-            if (testConnectResponse != null)
-            {
-                ServerTimeResponse serverTimeResponse = await binanceRestClient.GetServerTimeAsync();
-                Logger.Info($"Connection is established. Approximate ping time: {DateTime.UtcNow.Subtract(serverTimeResponse.ServerTime).TotalMilliseconds:F0} ms");
-            }
+
+            var testConnectResponse = await binanceRestClient.PingAsync();
+            DateTime serverTimeResponse = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                .AddMilliseconds(testConnectResponse.Data / 10.0)
+                .ToLocalTime();
+
+            Logger.Info($"Connection was established successfully. Approximate ping time: {DateTime.UtcNow.Subtract(serverTimeResponse).TotalMilliseconds:F0} ms");
         }
     }
 }
