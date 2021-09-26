@@ -16,6 +16,8 @@ namespace BinanceBot.Market
     {
         protected readonly Logger Logger;
 
+        protected readonly TStrategy MarketStrategy;
+
 
         protected BaseMarketBot(string symbol, TStrategy marketStrategy, Logger logger)
         {
@@ -26,8 +28,6 @@ namespace BinanceBot.Market
 
 
         public string Symbol { get; }
-
-        public TStrategy MarketStrategy { get; }
 
 
         public abstract Task RunAsync();
