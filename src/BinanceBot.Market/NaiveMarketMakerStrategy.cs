@@ -41,7 +41,7 @@ namespace BinanceBot.Market
             _logger.Info($"Best ask / bid: {marketPair.Ask.Price} / {marketPair.Bid.Price}. Update Id: {marketPair.UpdateTime}.");
 
             // get price spreads (in percent)
-            decimal actualSpread = marketPair.PriceSpread.Value / marketPair.MediumPrice.Value * 100; // spread_relative = spread_absolute/price * 100
+            decimal actualSpread = marketPair.PriceSpread!.Value / marketPair.MediumPrice!.Value * 100; // spread_relative = spread_absolute/price * 100
             decimal expectedSpread = _marketStrategyConfig.TradeWhenSpreadGreaterThan;
 
             _logger.Info($"Spread absolute / relative: {marketPair.PriceSpread} / {actualSpread:F3}%. Update Id: {marketPair.UpdateTime}.");
@@ -54,13 +54,10 @@ namespace BinanceBot.Market
                 decimal orderPrice = marketPair.Bid.Price + extra; // new_price = best_bid + extra
 
                 // compute order volume
-                decimal volumeSpread = marketPair.VolumeSpread.Value;
-                decimal orderVolume = volumeSpread > _marketStrategyConfig.MaxOrderVolume
-                    ? _marketStrategyConfig.MaxOrderVolume // set max volume
-                    : (volumeSpread < _marketStrategyConfig.MinOrderVolume
-                        ? _marketStrategyConfig.MinOrderVolume // set min volume
-                        : volumeSpread);
-
+                decimal volumeSpread = marketPair.VolumeSpread!.Value;
+                decimal orderVolume = volumeSpread > _marketStrategyConfig.MaxOrderVolume ? 
+                    _marketStrategyConfig.MaxOrderVolume : // set max volume
+                    (volumeSpread < _marketStrategyConfig.MinOrderVolume ? _marketStrategyConfig.MinOrderVolume : volumeSpread); // set min volume
 
                 // return new price-volume pair
                 quote = new Quote(orderPrice, orderVolume, OrderSide.Buy); 
