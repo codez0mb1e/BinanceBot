@@ -46,22 +46,13 @@ namespace BinanceBot.Market
 
 
 
-        public override async Task ValidateConnectionAsync()
+        public override async Task ValidateServerTimeAsync()
         {
-            Logger.Info("Testing connection...");
+            var exchangeServerTimeResult = await _binanceRestClient.Spot.System.GetServerTimeAsync().ConfigureAwait(false);
+            TimeSpan delay = exchangeServerTimeResult.Data.Subtract(DateTime.UtcNow);
 
-            CallResult<long> testConnectResponse = await _binanceRestClient.PingAsync().ConfigureAwait(false);
-            
-            if (testConnectResponse.Error != null) 
-                Logger.Error(testConnectResponse.Error.Message);
-            else
-            {
-                DateTime serverTimeResponse = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-                    .AddMilliseconds(testConnectResponse.Data/10.0)
-                    .ToLocalTime();
-
-                Logger.Info($"Connection was established successfully. Approximate ping time: {DateTime.UtcNow.Subtract(serverTimeResponse).TotalMilliseconds:F0} ms");
-            }
+            if (delay > MarketStrategy.Config.ReceiveWindow)
+                Logger.Error("Exchange server time doesn't match with local time");
         }
 
 
@@ -101,6 +92,8 @@ namespace BinanceBot.Market
                     receiveWindow: order.RecvWindow)
                 .ConfigureAwait(false);
 #endif
+            if (response.Data != null)
+                Console.WriteLine(response.Error?.Message);
 
             return response.Data;
         }
@@ -111,7 +104,7 @@ namespace BinanceBot.Market
         public override async Task RunAsync()
         {
             // validate connection w/ stock
-            await ValidateConnectionAsync();
+            await ValidateServerTimeAsync();
 
             // subscribe on order book updates
             _marketDepth.MarketBestPairChanged += async (s, e) => await OnMarketBestPairChanged(s, e);
@@ -120,10 +113,10 @@ namespace BinanceBot.Market
             var marketDepthManager = new MarketDepthManager(_binanceRestClient, _webSocketClient);
 
             // build order book
-            await marketDepthManager.BuildAsync(_marketDepth);
+            await marketDepthManager.BuildAsync(_marketDepth, 5);
             // stream order book updates
-            marketDepthManager.StreamUpdates(_marketDepth);
-        }
+            marketDepthManager.StreamUpdates(_marketDepth, TimeSpan.FromMilliseconds(1000));
+        } 
 
 
         private async Task OnMarketBestPairChanged(object sender, MarketBestPairChangedEventArgs e)

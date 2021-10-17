@@ -11,7 +11,6 @@ namespace BinanceBot.Market
     public class NaiveMarketMakerStrategy : IMarketStrategy
     {
         private readonly MarketStrategyConfiguration _marketStrategyConfig;
-
         private readonly Logger _logger;
 
 
@@ -20,6 +19,9 @@ namespace BinanceBot.Market
             _marketStrategyConfig = marketStrategyConfig ?? throw new ArgumentNullException(nameof(marketStrategyConfig));
             _logger = logger ?? LogManager.GetCurrentClassLogger();
         }
+
+
+        public MarketStrategyConfiguration Config => _marketStrategyConfig;
 
 
         /// <summary>

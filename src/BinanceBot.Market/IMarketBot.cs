@@ -30,7 +30,7 @@ namespace BinanceBot.Market
         /// <summary>
         /// Validate connection w/ stock
         /// </summary>
-        Task ValidateConnectionAsync();
+        Task ValidateServerTimeAsync();
 
         /// <summary>
         /// Get currently opened orders

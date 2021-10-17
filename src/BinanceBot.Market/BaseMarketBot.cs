@@ -34,7 +34,7 @@ namespace BinanceBot.Market
 
         public abstract void Stop();
 
-        public abstract Task ValidateConnectionAsync();
+        public abstract Task ValidateServerTimeAsync();
 
         public abstract Task<IEnumerable<BinanceOrder>> GetOpenedOrdersAsync(string symbol);
 
