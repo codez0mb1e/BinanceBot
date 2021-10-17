@@ -1,5 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Binance.Net;
+using Binance.Net.Enums;
 using Binance.Net.Interfaces;
 using Binance.Net.Objects;
 using BinanceBot.Market;
@@ -12,44 +15,69 @@ namespace BinanceBot.MarketBot.Console
 {
     public class Program
     {
+        #region Bot Settings
         // WARN: Set your credentials here here 
-        private const string Key = "******";
-        private const string Secret = "*****";
+        private const string ApiKey = "***";
+        private const string Secret = "***";
+        
+        // WARN: Set necessary token here
+        private const string Symbol = "BNBUSDT";
+        private static TimeSpan ReceiveWindow = TimeSpan.FromMinutes(1000);
+        #endregion
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-
+        
 
         static async Task Main(string[] args)
         {
-            // set bot settings
-            const string token = "ETHBTC"; // WARN: Set necessary token here
+            // 1. create connections with exchange
+            var credentials = new ApiCredentials(ApiKey, Secret);
+            using IBinanceClient binanceRestClient = new BinanceClient(new BinanceClientOptions { ApiCredentials = credentials });
+            using IBinanceSocketClient binanceSocketClient = new BinanceSocketClient(new BinanceSocketClientOptions { ApiCredentials = credentials });
 
-            IBinanceClient binanceRestClient = new BinanceClient(new BinanceClientOptions()
+
+            // 2. test connection
+            WriteLine("Testing connection...");
+            var pingAsyncResult = await binanceRestClient.PingAsync();
+            WriteLine($"Ping time: {pingAsyncResult.Data} ms");
+
+
+            // 3. set bot strategy config
+            var exchangeInfoResult = 
+                binanceRestClient.Spot.System.GetExchangeInfoAsync(Symbol);
+
+            var symbolInfo = exchangeInfoResult.Result.Data.Symbols
+                .Single(s => s.Name.Equals(Symbol, StringComparison.InvariantCultureIgnoreCase));
+
+            if (!(symbolInfo.Status == SymbolStatus.Trading && symbolInfo.OrderTypes.Contains(OrderType.Market)))
             {
-                ApiCredentials = new ApiCredentials(Key, Secret)
-            });
+                WriteLine($"[ERROR] Symbol {symbolInfo.Name} doesn't suitable for this strategy.");
+                return;
+            }
 
+            if (symbolInfo.LotSizeFilter == null)
+            {
+                WriteLine($"[ERROR] Cannot define risks strategy for {symbolInfo.Name}.");
+                return;
+            }
+            
             var strategyConfig = new MarketStrategyConfiguration
             {
-                MinOrderVolume = 0.0001M,
-                MaxOrderVolume = 0.001M,
-                TradeWhenSpreadGreaterThan = .001M
+                MinOrderVolume = symbolInfo.LotSizeFilter.MinQuantity,
+                MaxOrderVolume = symbolInfo.LotSizeFilter.MinQuantity*100,
+                TradeWhenSpreadGreaterThan = .02M,
+                ReceiveWindow = ReceiveWindow
             };
 
 
-            // create bot
-            IBinanceSocketClient binanceSocketClient = new BinanceSocketClient(new BinanceSocketClientOptions());
-            binanceSocketClient.SetApiCredentials(Key, Secret);
-
+            // 3. Start bot
             IMarketBot bot = new MarketMakerBot(
-                token,
+                Symbol,
                 new NaiveMarketMakerStrategy(strategyConfig, Logger),
                 binanceRestClient,
                 binanceSocketClient,
                 Logger);
 
-
-            // start bot
             try
             {
                 await bot.RunAsync();
