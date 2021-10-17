@@ -15,31 +15,41 @@ namespace BinanceBot.MarketViewer.Console
 {
     public class Program
     {
+        #region Bot Settings
         // WARN: Set your credentials here here 
-        private const string Key = "******";
-        private const string Secret = "*****";
+        private const string ApiKey = "***";
+        private const string Secret = "***";
+
+        // WARN: Set necessary token here
+        private const string Symbol = "BNBUSDT";
+        private const int OrderBookDepth = 10;
+        private static readonly TimeSpan? OrderBookUpdateLimit = TimeSpan.FromMilliseconds(1000);
+        #endregion
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
 
         static async Task Main(string[] args)
         {
-            const string token = "ETHBTC"; // WARN: Set necessary token here
-
-            IBinanceClient binanceRestClient = new BinanceClient(new BinanceClientOptions()
-            {
-                ApiCredentials = new ApiCredentials(Key, Secret)
-            });
+            // 1. create connections with exchange
+            var credentials = new ApiCredentials(ApiKey, Secret);
+            using IBinanceClient binanceRestClient = new BinanceClient(new BinanceClientOptions { ApiCredentials = credentials });
+            using IBinanceSocketClient binanceSocketClient = new BinanceSocketClient(new BinanceSocketClientOptions { ApiCredentials = credentials });
 
 
-            var marketDepth = new MarketDepth(token);
+            // 2. test connection
+            WriteLine("Testing connection...");
+            var pingResult = await binanceRestClient.PingAsync();
+            WriteLine($"Ping time: {pingResult.Data} ms");
 
-            await TestConnection(binanceRestClient);
 
+            // 3. get order book
+            var marketDepthManager = new MarketDepthManager(binanceRestClient, binanceSocketClient);
+            var marketDepth = new MarketDepth(Symbol);
+
+ 
             marketDepth.MarketDepthChanged += (sender, e) =>
             {
-                int n = 20;
-
                 Clear();
 
                 WriteLine("Price : Volume");
@@ -49,8 +59,8 @@ namespace BinanceBot.MarketViewer.Console
                         new
                         {
                             LastUpdate = e.UpdateTime,
-                            Asks = e.Asks.Take(n).Reverse().Select(s => $"{s.Price} : {s.Volume}"),
-                            Bids = e.Bids.Take(n).Select(s => $"{s.Price} : {s.Volume}")
+                            Asks = e.Asks.Reverse().Take(OrderBookDepth).Select(s => $"{s.Price} : {s.Volume}"),
+                            Bids = e.Bids.Take(OrderBookDepth).Select(s => $"{s.Price} : {s.Volume}")
                         }, 
                         Formatting.Indented));
 
@@ -60,33 +70,14 @@ namespace BinanceBot.MarketViewer.Console
             };
 
 
-            IBinanceSocketClient binanceSocketClient = new BinanceSocketClient(new BinanceSocketClientOptions());
-            binanceSocketClient.SetApiCredentials(Key, Secret);
-
-            var marketDepthManager = new MarketDepthManager(binanceRestClient, binanceSocketClient);
-
             // build order book
-            await marketDepthManager.BuildAsync(marketDepth);
+            await marketDepthManager.BuildAsync(marketDepth, OrderBookDepth);
             // stream order book updates
-            marketDepthManager.StreamUpdates(marketDepth);
+            marketDepthManager.StreamUpdates(marketDepth, OrderBookUpdateLimit);
 
 
             WriteLine("Press Enter to exit...");
             ReadLine();
-        }
-
-
-
-        private static async Task TestConnection(IBinanceClient binanceRestClient)
-        {
-            Logger.Info("Testing connection...");
-
-            var testConnectResponse = await binanceRestClient.PingAsync();
-            DateTime serverTimeResponse = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-                .AddMilliseconds(testConnectResponse.Data / 10.0)
-                .ToLocalTime();
-
-            Logger.Info($"Connection was established successfully. Approximate ping time: {DateTime.UtcNow.Subtract(serverTimeResponse).TotalMilliseconds:F0} ms");
         }
     }
 }

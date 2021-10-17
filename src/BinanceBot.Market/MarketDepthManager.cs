@@ -67,14 +67,15 @@ namespace BinanceBot.Market
         /// Stream <see cref="MarketDepth"/> updates
         /// </summary>
         /// <param name="marketDepth">Market depth</param>
-        public void StreamUpdates(MarketDepth marketDepth)
+        /// <param name="updateInterval"></param>
+        public void StreamUpdates(MarketDepth marketDepth, TimeSpan? updateInterval = default)
         {
             if (marketDepth == null)
                 throw new ArgumentNullException(nameof(marketDepth));
 
             _webSocketClient.Spot.SubscribeToOrderBookUpdatesAsync(
                 marketDepth.Symbol,
-                1000, 
+                (int)updateInterval?.TotalMilliseconds, 
                 marketData => marketDepth.UpdateDepth(marketData.Data.Asks, marketData.Data.Bids, marketData.Data.LastUpdateId));
         }
     }
