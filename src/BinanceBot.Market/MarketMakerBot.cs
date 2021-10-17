@@ -81,7 +81,10 @@ namespace BinanceBot.Market
 
 #if TEST_ORDER_CREATION_MODE
             WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.Spot.Order.PlaceTestOrderAsync(
-                order.Symbol, order.Side, order.Type, order.Quantity,
+                order.Symbol, 
+                order.Side, 
+                order.Type, 
+                order.Quantity,
                 newClientOrderId:order.NewClientOrderId, 
                 receiveWindow:order.RecvWindow)
                 .ConfigureAwait(false);
@@ -92,7 +95,8 @@ namespace BinanceBot.Market
                     receiveWindow: order.RecvWindow)
                 .ConfigureAwait(false);
 #endif
-            if (response.Data != null)
+            
+            if (response.Error != null)
                 Console.WriteLine(response.Error?.Message);
 
             return response.Data;
@@ -142,14 +146,15 @@ namespace BinanceBot.Market
                     Price = q.Price,
                     Side = q.Direction,
                     Type = OrderType.Limit,
-                    TimeInForce = TimeInForce.GoodTillCancel // 'Good Till Cancelled' marketStrategy 
+                    TimeInForce = TimeInForce.GoodTillCancel, // 'Good Till Cancelled' marketStrategy 
+                    RecvWindow = (int)MarketStrategy.Config.ReceiveWindow.TotalMilliseconds
                 };
 
                 await CreateOrderAsync(newOrderRequest);
                 Logger.Info($"Limit order created. Price: {newOrderRequest.Price}. Volume: {newOrderRequest.Quantity}");
-            }
 
-            Console.WriteLine(Environment.NewLine); // only for beauty console output purposes
+                Console.WriteLine(Environment.NewLine); // only for beauty console output purposes
+            }
         }
 #endregion
 
