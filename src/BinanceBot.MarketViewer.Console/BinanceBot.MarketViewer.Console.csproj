@@ -12,8 +12,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NLog" Version="4.7.11" />
-    <PackageReference Include="NLog.Config" Version="4.7.11" />
+    <PackageReference Include="NLog" Version="4.7.12" />
+    <PackageReference Include="NLog.Config" Version="4.7.12" />
   </ItemGroup>
 
   <ItemGroup>
