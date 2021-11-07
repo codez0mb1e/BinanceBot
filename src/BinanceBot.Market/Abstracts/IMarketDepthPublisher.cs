@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using BinanceBot.Market.Core;
 
 namespace BinanceBot.Market
 {

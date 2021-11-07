@@ -5,8 +5,7 @@ using Binance.Net.Enums;
 using Binance.Net.Objects;
 using BinanceBot.Market.Utility;
 
-
-namespace BinanceBot.Market
+namespace BinanceBot.Market.Core
 {
     /// <summary>
     /// Order book

@@ -1,9 +1,10 @@
 ﻿using System;
 using Binance.Net.Enums;
+using BinanceBot.Market.Configurations;
+using BinanceBot.Market.Core;
 using NLog;
 
-
-namespace BinanceBot.Market
+namespace BinanceBot.Market.Strategies
 {
     /// <summary>
     /// Market Maker strategy (naive version)

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BinanceBot.Market
+namespace BinanceBot.Market.Configurations
 {
     /// <summary>
     /// Market Strategy configuration
@@ -9,7 +9,7 @@ namespace BinanceBot.Market
     /// <see cref="MarketStrategyConfiguration"/> limits must not contradict Stock limits.
     /// Binance limits: <see href="https://api.binance.com/api/v1/exchangeInfo"/>
     /// </remarks>
-    public class MarketStrategyConfiguration
+    public record MarketStrategyConfiguration
     {
         /// <summary>
         /// Start trading when spread greater than that values (in percentage point)
