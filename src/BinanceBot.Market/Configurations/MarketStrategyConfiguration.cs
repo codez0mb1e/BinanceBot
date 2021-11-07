@@ -27,6 +27,9 @@ namespace BinanceBot.Market.Configurations
         /// Maximum order volume
         /// </summary>
         public decimal MaxOrderVolume { get; set; }
+
+
+        public int QuoteAssetPrecision { get; set; }
         #endregion
 
 
