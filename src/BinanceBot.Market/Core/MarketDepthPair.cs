@@ -5,12 +5,14 @@ namespace BinanceBot.Market.Core
     /// <summary>
     /// Order book's ask-bid pair
     /// </summary>
-    public class MarketDepthPair
+    public record MarketDepthPair
     {
         public MarketDepthPair(Quote ask, Quote bid, long updateTime)
         {
             if (updateTime <= 0)
                 throw new ArgumentOutOfRangeException(nameof(updateTime));
+            if (ask.Price < bid.Price)
+                throw new ArgumentNullException(nameof(bid), "Best sell price (ask) cannot be less the best buy price (bid)");
 
             Ask = ask;
             Bid = bid;
@@ -24,13 +26,15 @@ namespace BinanceBot.Market.Core
 
         public long UpdateTime { get; }
 
+        /// <summary>
+        /// Flag that <see cref="MarketDepth"/> has orders on 2 sides
+        /// </summary>
+        public bool IsFull => Ask != null && Bid != null;
 
-        public bool IsFullPair => Ask != null && Bid != null;
+        public decimal? PriceSpread => IsFull ? Ask.Price - Bid.Price : default;
 
-        public decimal? PriceSpread => IsFullPair ? Ask.Price - Bid.Price : default;
+        public decimal? VolumeSpread => IsFull ? Math.Abs(Ask.Volume - Bid.Volume) : default;
 
-        public decimal? VolumeSpread => IsFullPair ? Math.Abs(Ask.Volume - Bid.Volume) : default;
-
-        public decimal? MediumPrice => IsFullPair ? (Ask.Price + Bid.Price) / 2 : default;
+        public decimal? MediumPrice => IsFull ? (Ask.Price + Bid.Price) / 2 : default;
     }
 }

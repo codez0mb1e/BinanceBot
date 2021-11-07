@@ -34,7 +34,7 @@ namespace BinanceBot.Market.Strategies
         {
             if (marketPair == null)
                 throw new ArgumentNullException(nameof(marketPair));
-            if (!marketPair.IsFullPair)
+            if (!marketPair.IsFull)
                 return null;
 
 

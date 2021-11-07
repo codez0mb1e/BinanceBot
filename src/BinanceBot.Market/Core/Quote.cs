@@ -6,7 +6,7 @@ namespace BinanceBot.Market.Core
     /// <summary>
     /// <see cref="MarketDepth"/> quote representing bid or ask
     /// </summary>
-    public class Quote
+    public record Quote
     {
         public Quote(decimal price, decimal volume, OrderSide direction)
         {

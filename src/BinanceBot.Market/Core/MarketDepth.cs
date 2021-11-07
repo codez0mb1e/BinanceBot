@@ -88,15 +88,13 @@ namespace BinanceBot.Market.Core
 
             void UpdateOrderBook(IEnumerable<BinanceOrderBookEntry> updates, IDictionary<decimal, decimal> orders)
             {
-                if (updates != null)
+                if (updates == null) return;
+                foreach (BinanceOrderBookEntry t in updates)
                 {
-                    foreach (BinanceOrderBookEntry t in updates)
-                    {
-                        if (t.Quantity != IgnoreVolumeValue)
-                            orders[t.Price] = t.Quantity;
-                        else
-                            if (orders.ContainsKey(t.Price)) orders.Remove(t.Price);
-                    }
+                    if (t.Quantity > IgnoreVolumeValue)
+                        orders[t.Price] = t.Quantity;
+                    else
+                        if (orders.ContainsKey(t.Price)) orders.Remove(t.Price);
                 }
             }
 
