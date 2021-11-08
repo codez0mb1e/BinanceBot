@@ -50,7 +50,7 @@ namespace BinanceBot.Market
         /// </summary>
         /// <param name="marketDepth">Market depth</param>
         /// <param name="limit">Limit of returned orders count</param>
-        public async Task BuildAsync(MarketDepth marketDepth, int limit = 100)
+        public async Task BuildAsync(MarketDepth marketDepth, short limit = 10)
         {
             if (marketDepth == null)
                 throw new ArgumentNullException(nameof(marketDepth));

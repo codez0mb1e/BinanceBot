@@ -5,6 +5,7 @@ using Binance.Net;
 using Binance.Net.Interfaces;
 using Binance.Net.Objects;
 using BinanceBot.Market;
+using BinanceBot.Market.Core;
 using CryptoExchange.Net.Authentication;
 using Newtonsoft.Json;
 

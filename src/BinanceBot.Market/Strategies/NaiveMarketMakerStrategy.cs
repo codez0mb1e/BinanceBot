@@ -58,8 +58,8 @@ namespace BinanceBot.Market.Strategies
                 // compute order volume
                 decimal volumeSpread = marketPair.VolumeSpread!.Value;
                 decimal orderVolume = volumeSpread > _marketStrategyConfig.MaxOrderVolume ? 
-                    _marketStrategyConfig.MaxOrderVolume : // set max volume
-                    (volumeSpread < _marketStrategyConfig.MinOrderVolume ? _marketStrategyConfig.MinOrderVolume : volumeSpread); // set min volume
+                    _marketStrategyConfig.MaxOrderVolume : // max volume restriction
+                    (volumeSpread < _marketStrategyConfig.MinOrderVolume ? _marketStrategyConfig.MinOrderVolume : volumeSpread); // min volume restriction
 
                 // return new price-volume pair
                 quote = new Quote(orderPrice, orderVolume, OrderSide.Buy); 
