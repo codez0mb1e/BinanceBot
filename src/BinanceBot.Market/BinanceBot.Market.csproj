@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Binance.Net" Version="7.2.6" />
-    <PackageReference Include="NLog" Version="4.7.12" />
+    <PackageReference Include="Binance.Net" Version="7.2.7" />
+    <PackageReference Include="NLog" Version="4.7.13" />
   </ItemGroup>
 
 </Project>
