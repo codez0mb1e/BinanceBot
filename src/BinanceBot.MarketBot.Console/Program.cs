@@ -6,6 +6,8 @@ using Binance.Net.Enums;
 using Binance.Net.Interfaces;
 using Binance.Net.Objects;
 using BinanceBot.Market;
+using BinanceBot.Market.Configurations;
+using BinanceBot.Market.Strategies;
 using CryptoExchange.Net.Authentication;
 
 using static System.Console;
@@ -13,16 +15,16 @@ using static System.Console;
 
 namespace BinanceBot.MarketBot.Console
 {
-    public class Program
+    internal static class Program
     {
         #region Bot Settings
         // WARN: Set your credentials here here 
         private const string ApiKey = "***";
         private const string Secret = "***";
-        
+
         // WARN: Set necessary token here
-        private const string Symbol = "BNBUSDT";
-        private static TimeSpan ReceiveWindow = TimeSpan.FromMinutes(1000);
+        private const string Symbol = "DOGEBTC";
+        private static readonly TimeSpan ReceiveWindow = TimeSpan.FromMilliseconds(1000);
         #endregion
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
@@ -37,9 +39,23 @@ namespace BinanceBot.MarketBot.Console
 
 
             // 2. test connection
-            WriteLine("Testing connection...");
+            Logger.Info("Testing connection...");
             var pingAsyncResult = await binanceRestClient.PingAsync();
-            WriteLine($"Ping time: {pingAsyncResult.Data} ms");
+            Logger.Info($"Ping: {pingAsyncResult.Data} ms");
+
+
+            // 2.1. check permissions
+            var permissionsResponse = await binanceRestClient.General.GetAPIKeyPermissionsAsync();
+            if (!permissionsResponse.Success)
+            {
+                Logger.Error($"{permissionsResponse.Error?.Message}");
+                ReadLine();
+            }
+            else if (permissionsResponse.Data.IpRestrict | !permissionsResponse.Data.EnableSpotAndMarginTrading)
+            {
+                Logger.Error("Insufficient API permissions.");
+                ReadLine();
+            }
 
 
             // 3. set bot strategy config
@@ -51,29 +67,33 @@ namespace BinanceBot.MarketBot.Console
 
             if (!(symbolInfo.Status == SymbolStatus.Trading && symbolInfo.OrderTypes.Contains(OrderType.Market)))
             {
-                WriteLine($"[ERROR] Symbol {symbolInfo.Name} doesn't suitable for this strategy.");
+                Logger.Error($"Symbol {symbolInfo.Name} doesn't suitable for this strategy.");
                 return;
             }
 
             if (symbolInfo.LotSizeFilter == null)
             {
-                WriteLine($"[ERROR] Cannot define risks strategy for {symbolInfo.Name}.");
+                Logger.Error($"Cannot define risks strategy for {symbolInfo.Name}.");
                 return;
             }
-            
+
+            // WARN: Set thresholds for strategy here
             var strategyConfig = new MarketStrategyConfiguration
             {
                 MinOrderVolume = symbolInfo.LotSizeFilter.MinQuantity,
-                MaxOrderVolume = symbolInfo.LotSizeFilter.MinQuantity*100,
-                TradeWhenSpreadGreaterThan = .02M,
+                MaxOrderVolume = symbolInfo.LotSizeFilter.MinQuantity*10,
+                TradeWhenSpreadGreaterThan = .02M, // == 0.02%
+                QuoteAssetPrecision = symbolInfo.QuoteAssetPrecision,
                 ReceiveWindow = ReceiveWindow
             };
+
+            var marketStrategy = new NaiveMarketMakerStrategy(strategyConfig, Logger);
 
 
             // 3. Start bot
             IMarketBot bot = new MarketMakerBot(
                 Symbol,
-                new NaiveMarketMakerStrategy(strategyConfig, Logger),
+                marketStrategy,
                 binanceRestClient,
                 binanceSocketClient,
                 Logger);
@@ -82,7 +102,7 @@ namespace BinanceBot.MarketBot.Console
             {
                 await bot.RunAsync();
 
-                WriteLine("Press Enter to stop bot...");
+                WriteLine($"Press Enter to stop {Symbol} bot...");
                 ReadLine();
             }
             finally

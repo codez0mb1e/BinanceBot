@@ -14,7 +14,7 @@ using static System.Console;
 
 namespace BinanceBot.MarketViewer.Console
 {
-    public class Program
+    internal static class Program
     {
         #region Bot Settings
         // WARN: Set your credentials here here 
@@ -22,7 +22,7 @@ namespace BinanceBot.MarketViewer.Console
         private const string Secret = "***";
 
         // WARN: Set necessary token here
-        private const string Symbol = "BNBUSDT";
+        private const string Symbol = "DOGEBTC";
         private const int OrderBookDepth = 10;
         private static readonly TimeSpan? OrderBookUpdateLimit = TimeSpan.FromMilliseconds(1000);
         #endregion
@@ -39,9 +39,9 @@ namespace BinanceBot.MarketViewer.Console
 
 
             // 2. test connection
-            WriteLine("Testing connection...");
+            Logger.Info("Testing connection...");
             var pingResult = await binanceRestClient.PingAsync();
-            WriteLine($"Ping time: {pingResult.Data} ms");
+            Logger.Info($"Ping time: {pingResult.Data} ms");
 
 
             // 3. get order book
