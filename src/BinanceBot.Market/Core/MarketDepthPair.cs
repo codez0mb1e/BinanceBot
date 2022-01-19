@@ -9,11 +9,15 @@ namespace BinanceBot.Market.Core
     {
         public MarketDepthPair(Quote ask, Quote bid, long updateTime)
         {
-            if (updateTime <= 0)
-                throw new ArgumentOutOfRangeException(nameof(updateTime));
+            if (ask == null) 
+                throw new ArgumentNullException(nameof(ask));
+            if (bid == null) 
+                throw new ArgumentNullException(nameof(bid));
             if (ask.Price < bid.Price)
                 throw new ArgumentNullException(nameof(bid), "Best sell price (ask) cannot be less the best buy price (bid)");
-
+            if (updateTime <= 0)
+                throw new ArgumentOutOfRangeException(nameof(updateTime));
+            
             Ask = ask;
             Bid = bid;
             UpdateTime = updateTime;
@@ -35,6 +39,6 @@ namespace BinanceBot.Market.Core
 
         public decimal? VolumeSpread => IsFull ? Math.Abs(Ask.Volume - Bid.Volume) : default;
 
-        public decimal? MediumPrice => IsFull ? (Ask.Price + Bid.Price) / 2 : default;
+        public decimal? MediumPrice => IsFull ? (Ask.Price + Bid.Price)/2 : default;
     }
 }

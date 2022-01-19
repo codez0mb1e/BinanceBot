@@ -71,7 +71,7 @@ namespace BinanceBot.Market.Core
 
 
         #region Update depth section
-        private const decimal IgnoreVolumeValue = 0.00000000M;
+        private const decimal IgnoreVolumeValue = 1e-11M;
 
         /// <summary>
         /// Update market depth
@@ -88,7 +88,13 @@ namespace BinanceBot.Market.Core
 
             void UpdateOrderBook(IEnumerable<BinanceOrderBookEntry> updates, IDictionary<decimal, decimal> orders)
             {
+                if (orders == null) throw new ArgumentNullException(nameof(orders));
                 if (updates == null) return;
+
+                // WARN: clean orders in cases when connector received orderbook snapshots instead of orderbook updates
+                // orders.Clear();
+
+                // update order book
                 foreach (BinanceOrderBookEntry t in updates)
                 {
                     if (t.Quantity > IgnoreVolumeValue)
