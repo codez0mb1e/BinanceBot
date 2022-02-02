@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Binance.Net.Enums;
 using Binance.Net.Interfaces;
 using Binance.Net.Objects.Spot.SpotData;
+using BinanceBot.Market.Core;
+using BinanceBot.Market.Strategies;
 using CryptoExchange.Net.Objects;
 using NLog;
 
@@ -46,22 +48,13 @@ namespace BinanceBot.Market
 
 
 
-        public override async Task ValidateConnectionAsync()
+        public override async Task ValidateServerTimeAsync()
         {
-            Logger.Info("Testing connection...");
+            var exchangeServerTimeResult = await _binanceRestClient.Spot.System.GetServerTimeAsync().ConfigureAwait(false);
+            TimeSpan delay = exchangeServerTimeResult.Data.Subtract(DateTime.UtcNow);
 
-            CallResult<long> testConnectResponse = await _binanceRestClient.PingAsync().ConfigureAwait(false);
-            
-            if (testConnectResponse.Error != null) 
-                Logger.Error(testConnectResponse.Error.Message);
-            else
-            {
-                DateTime serverTimeResponse = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-                    .AddMilliseconds(testConnectResponse.Data/10.0)
-                    .ToLocalTime();
-
-                Logger.Info($"Connection was established successfully. Approximate ping time: {DateTime.UtcNow.Subtract(serverTimeResponse).TotalMilliseconds:F0} ms");
-            }
+            if (delay > MarketStrategy.Config.ReceiveWindow)
+                Logger.Warn($"Exchange server time doesn't match with local time. Current delay {delay.TotalSeconds} ms");
         }
 
 
@@ -87,20 +80,34 @@ namespace BinanceBot.Market
 
         public override async Task<BinancePlacedOrder> CreateOrderAsync(CreateOrderRequest order)
         {
+            if (order == null) throw new ArgumentNullException(nameof(order));
 
-#if TEST_ORDER_CREATION_MODE
+            #if TEST_ORDER_CREATION_MODE
             WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.Spot.Order.PlaceTestOrderAsync(
-                order.Symbol, order.Side, order.Type, order.Quantity,
-                newClientOrderId:order.NewClientOrderId, 
-                receiveWindow:order.RecvWindow)
+                    symbol: order.Symbol, 
+                    side: order.Side, 
+                    type: order.Type, 
+                    price: order.Price,
+                    quantity: order.Quantity,
+                    timeInForce: order.TimeInForce,
+                    newClientOrderId: order.NewClientOrderId, 
+                    receiveWindow:order.RecvWindow)
                 .ConfigureAwait(false);
-#else
+            #else
             WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.Spot.Order.PlaceOrderAsync(
-                    order.Symbol, order.Side, order.Type, order.Quantity,
+                    symbol: order.Symbol,
+                    side: order.Side,
+                    type: order.Type,
+                    price: order.Price,
+                    quantity: order.Quantity,
+                    timeInForce: order.TimeInForce,
                     newClientOrderId: order.NewClientOrderId,
                     receiveWindow: order.RecvWindow)
                 .ConfigureAwait(false);
-#endif
+            #endif
+            
+            if (response.Error != null)
+                Logger.Error(response.Error.Message);
 
             return response.Data;
         }
@@ -111,7 +118,7 @@ namespace BinanceBot.Market
         public override async Task RunAsync()
         {
             // validate connection w/ stock
-            await ValidateConnectionAsync();
+            await ValidateServerTimeAsync();
 
             // subscribe on order book updates
             _marketDepth.MarketBestPairChanged += async (s, e) => await OnMarketBestPairChanged(s, e);
@@ -119,11 +126,11 @@ namespace BinanceBot.Market
 
             var marketDepthManager = new MarketDepthManager(_binanceRestClient, _webSocketClient);
 
-            // build order book
-            await marketDepthManager.BuildAsync(_marketDepth);
             // stream order book updates
-            marketDepthManager.StreamUpdates(_marketDepth);
-        }
+            marketDepthManager.StreamUpdates(_marketDepth, TimeSpan.FromMilliseconds(1000));
+            // build order book
+            await marketDepthManager.BuildAsync(_marketDepth, 100);
+        } 
 
 
         private async Task OnMarketBestPairChanged(object sender, MarketBestPairChangedEventArgs e)
@@ -140,31 +147,31 @@ namespace BinanceBot.Market
             // find new market position
             Quote q = MarketStrategy.Process(e.MarketBestPair);
             // if position found then create order 
-            if (q != null)
+            if (q != null) 
             {
                 var newOrderRequest = new CreateOrderRequest
                 {
                     Symbol = Symbol,
-                    Quantity = q.Volume,
-                    Price = q.Price,
+                    Quantity = Decimal.Round(q.Volume, decimals: MarketStrategy.Config.QuoteAssetPrecision),
+                    Price = Decimal.Round(q.Price, decimals: MarketStrategy.Config.PricePrecision),
                     Side = q.Direction,
                     Type = OrderType.Limit,
-                    TimeInForce = TimeInForce.GoodTillCancel // 'Good Till Cancelled' marketStrategy 
+                    TimeInForce = TimeInForce.GoodTillCancel,
+                    RecvWindow = (int)MarketStrategy.Config.ReceiveWindow.TotalMilliseconds
                 };
 
-                await CreateOrderAsync(newOrderRequest);
-                Logger.Info($"Limit order created. Price: {newOrderRequest.Price}. Volume: {newOrderRequest.Quantity}");
+                var createOrderResponse = await CreateOrderAsync(newOrderRequest);
+                if (createOrderResponse != null)
+                    Logger.Warn($"Limit order was created. Price: {createOrderResponse.Price}. Volume: {createOrderResponse.Quantity}");
             }
-
-            Console.WriteLine(Environment.NewLine); // only for beauty console output purposes
         }
-#endregion
+        #endregion
 
 
-#region Stop/dispose bot section
+        #region Stop/dispose bot section
         public override void Stop()
         {
-            Logger.Info("Bot is stopped");
+            Logger.Warn("Bot was stopped");
             Dispose();
         }
 
@@ -181,6 +188,6 @@ namespace BinanceBot.Market
             if (disposing)
                 _webSocketClient.Dispose();
         }
-#endregion
+        #endregion
     }
 }
