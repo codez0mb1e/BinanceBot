@@ -126,10 +126,10 @@ namespace BinanceBot.Market
 
             var marketDepthManager = new MarketDepthManager(_binanceRestClient, _webSocketClient);
 
-            // build order book
-            await marketDepthManager.BuildAsync(_marketDepth, 5);
             // stream order book updates
             marketDepthManager.StreamUpdates(_marketDepth, TimeSpan.FromMilliseconds(1000));
+            // build order book
+            await marketDepthManager.BuildAsync(_marketDepth, 100);
         } 
 
 
@@ -147,13 +147,13 @@ namespace BinanceBot.Market
             // find new market position
             Quote q = MarketStrategy.Process(e.MarketBestPair);
             // if position found then create order 
-            if (q != null)
+            if (q != null) 
             {
                 var newOrderRequest = new CreateOrderRequest
                 {
                     Symbol = Symbol,
-                    Quantity = Decimal.Round(q.Volume, decimals: MarketStrategy.Config.QuoteAssetPrecision - 1), // TODO
-                    Price = Decimal.Round(q.Price, decimals: MarketStrategy.Config.QuoteAssetPrecision - 1), // TODO
+                    Quantity = Decimal.Round(q.Volume, decimals: MarketStrategy.Config.QuoteAssetPrecision),
+                    Price = Decimal.Round(q.Price, decimals: MarketStrategy.Config.PricePrecision),
                     Side = q.Direction,
                     Type = OrderType.Limit,
                     TimeInForce = TimeInForce.GoodTillCancel,
