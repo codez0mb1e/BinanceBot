@@ -15,7 +15,7 @@ namespace BinanceBot.Market
     /// How to manage a local order book correctly [1]: 
     ///    1. Open a stream to wss://stream.binance.com:9443/ws/bnbbtc@depth
     ///    2. Buffer the events you receive from the stream
-    ///    3. Get a depth snapshot from https://www.binance.com/api/v1/depth?symbol=BNBBTC&amp;limit=1000
+    /// -> 3. Get a depth snapshot from https://www.binance.com/api/v1/depth?symbol=BNBBTC&amp;limit=1000
     ///    4. Drop any event where u is less or equal lastUpdateId in the snapshot
     ///    5. The first processed should have U less or equal lastUpdateId+1 AND u equal or greater lastUpdateId+1
     ///    6. While listening to the stream, each new event's U should be equal to the previous event's u+1
