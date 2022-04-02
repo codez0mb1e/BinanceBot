@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -6,18 +6,27 @@
     <Version>0.3.0</Version>
     <Authors>Dmitry Petukhov</Authors>
     <Product>BinanceBot</Product>
-    <Copyright>(c) 2021, Dmitry Petukhov.</Copyright>
+    <Copyright>(c) 2022, Dmitry Petukhov.</Copyright>
     <PackageProjectUrl>http://0xcode.in/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/codez0mb1e/BinanceBot</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NLog" Version="4.7.14" />
-    <PackageReference Include="NLog.Config" Version="4.7.14" />
+    <None Remove="C:\Users\dmitr\.nuget\packages\nlog.config\4.7.15\contentFiles\any\any\NLog.config" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NLog" Version="4.7.15" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BinanceBot.Market\BinanceBot.Market.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="NLog.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
