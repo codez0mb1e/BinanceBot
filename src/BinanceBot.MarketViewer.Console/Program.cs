@@ -79,14 +79,22 @@ namespace BinanceBot.MarketViewer.Console
 
         private static async Task TestConnection(IBinanceClient binanceRestClient)
         {
+            if (binanceRestClient == null) throw new ArgumentNullException(nameof(binanceRestClient));
+
             Logger.Info("Testing connection...");
 
-            var testConnectResponse = await binanceRestClient.PingAsync();
-            DateTime serverTimeResponse = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-                .AddMilliseconds(testConnectResponse.Data / 10.0)
-                .ToLocalTime();
+            var testConnectResponse = await binanceRestClient.PingAsync().ConfigureAwait(false);
 
-            Logger.Info($"Connection was established successfully. Approximate ping time: {DateTime.UtcNow.Subtract(serverTimeResponse).TotalMilliseconds:F0} ms");
+            if (testConnectResponse.Error != null)
+                Logger.Error(testConnectResponse.Error.Message);
+            else
+            {
+                string msg = $"Connection was established successfully. Approximate ping time: {testConnectResponse.Data} ms";
+                if (testConnectResponse.Data > 1000)
+                    Logger.Warn(msg);
+                else
+                    Logger.Info(msg);
+            }
         }
     }
 }

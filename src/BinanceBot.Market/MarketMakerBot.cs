@@ -56,11 +56,11 @@ namespace BinanceBot.Market
                 Logger.Error(testConnectResponse.Error.Message);
             else
             {
-                DateTime serverTimeResponse = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-                    .AddMilliseconds(testConnectResponse.Data/10.0)
-                    .ToLocalTime();
-
-                Logger.Info($"Connection was established successfully. Approximate ping time: {DateTime.UtcNow.Subtract(serverTimeResponse).TotalMilliseconds:F0} ms");
+                string msg = $"Connection was established successfully. Approximate ping time: {testConnectResponse.Data} ms";
+                if (testConnectResponse.Data > 1000)
+                    Logger.Warn(msg);
+                else
+                    Logger.Info(msg);
             }
         }
 
