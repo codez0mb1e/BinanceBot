@@ -36,21 +36,20 @@ namespace BinanceBot.MarketViewer.Console
 
             await TestConnection(binanceRestClient);
 
+
+            const int marketDepthLimit = 10;
             marketDepth.MarketDepthChanged += (sender, e) =>
             {
-                int n = 20;
-
                 Clear();
 
                 WriteLine("Price : Volume");
-
                 WriteLine(
                     JsonConvert.SerializeObject(
                         new
                         {
                             LastUpdate = e.UpdateTime,
-                            Asks = e.Asks.Take(n).Reverse().Select(s => $"{s.Price} : {s.Volume}"),
-                            Bids = e.Bids.Take(n).Select(s => $"{s.Price} : {s.Volume}")
+                            Asks = e.Asks.Take(marketDepthLimit).Reverse().Select(s => $"{s.Price} : {s.Volume}"),
+                            Bids = e.Bids.Take(marketDepthLimit).Select(s => $"{s.Price} : {s.Volume}")
                         }, 
                         Formatting.Indented));
 
