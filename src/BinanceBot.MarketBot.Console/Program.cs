@@ -87,10 +87,10 @@ namespace BinanceBot.MarketBot.Console
             // WARN: set thresholds for strategy here
             var strategyConfig = new MarketStrategyConfiguration
             {
-                TradeWhenSpreadGreaterThan = .02M, // or 0.02%, (price spread*min_volume) should be greater than broker's commissions for trade
+                TradeWhenSpreadGreaterThan = .05M, // or 0.05%, (price spread*min_volume) should be greater than broker's commissions for trade
                 MinOrderVolume = symbolInfo.LotSizeFilter.MinQuantity*10,
                 MaxOrderVolume = symbolInfo.LotSizeFilter.MinQuantity*100,
-                QuoteAssetPrecision = symbolInfo.QuoteAssetPrecision,
+                BaseAssetPrecision = symbolInfo.BaseAssetPrecision,
                 PricePrecision = pricePrecision,
                 ReceiveWindow = ReceiveWindow
             };

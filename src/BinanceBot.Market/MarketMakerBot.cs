@@ -89,7 +89,7 @@ namespace BinanceBot.Market
         {
             if (order == null) throw new ArgumentNullException(nameof(order));
 
-            #if TEST_ORDER_CREATION_MODE
+#if TEST_ORDER_CREATION_MODE
             WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.SpotApi.Trading.PlaceTestOrderAsync(
                     // general
                     order.Symbol,
@@ -103,22 +103,22 @@ namespace BinanceBot.Market
                     timeInForce: order.TimeInForce,
                     receiveWindow: order.RecvWindow)
                 .ConfigureAwait(false);
-            #else
+#else
             WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.SpotApi.Trading.PlaceOrderAsync(
                     // general
-                    order.Symbol, 
-                    order.Side, 
+                    order.Symbol,
+                    order.Side,
                     order.OrderType,
                     // price-quantity
-                    price: order.Price,
+                    price: order.Price, 
                     quantity: order.Quantity,
                     // metadata
                     newClientOrderId: order.NewClientOrderId,
                     timeInForce: order.TimeInForce,
                     receiveWindow: order.RecvWindow)
                 .ConfigureAwait(false);
-            #endif
-            
+#endif
+
             if (response.Error != null)
                 Logger.Error(response.Error.Message);
 
