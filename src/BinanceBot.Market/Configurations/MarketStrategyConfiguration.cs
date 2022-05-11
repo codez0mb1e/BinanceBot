@@ -30,9 +30,9 @@ namespace BinanceBot.Market.Configurations
 
 
         /// <summary>
-        /// Precision of the quote asset
+        /// Precision of the base asset
         /// </summary>
-        public int QuoteAssetPrecision { get; set; }
+        public int BaseAssetPrecision { get; set; }
 
         /// <summary>
         /// Price precision

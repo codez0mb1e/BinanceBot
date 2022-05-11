@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Binance.Net.Clients;
 using Binance.Net.Interfaces.Clients;
@@ -23,13 +22,12 @@ namespace BinanceBot.MarketViewer.Console
         private const string Secret = "***";
 
         // WARN: Set necessary token here
-        private const string Symbol = "DOGEBTC";
+        private const string Symbol = "SOLUSDT";
         private const int OrderBookDepth = 10;
         private static readonly TimeSpan? OrderBookUpdateLimit = TimeSpan.FromMilliseconds(1000);
         #endregion
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        private static readonly ApiCredentials Credentials = new(Key, Secret);
 
 
         static async Task Main(string[] args)
@@ -42,7 +40,7 @@ namespace BinanceBot.MarketViewer.Console
 
             // 2. test connection
             Logger.Info("Testing connection...");
-            var pingResult = await binanceRestClient.PingAsync();
+            var pingResult = await binanceRestClient.SpotApi.ExchangeData.PingAsync();
             Logger.Info($"Ping time: {pingResult.Data} ms");
 
 
@@ -62,8 +60,8 @@ namespace BinanceBot.MarketViewer.Console
                         {
                             LastUpdate = e.UpdateTime,
 
-                            Asks = e.Asks.Reverse().Take(OrderBookDepth).Select(s => $"{s.Price} : {s.Volume}"),
-                            Bids = e.Bids.Take(OrderBookDepth).Select(s => $"{s.Price} : {s.Volume}")
+                            Asks = e.Asks.OrderByDescending(q => q.Price).Take(OrderBookDepth).Select(s => $"{s.Price} : {s.Volume}"),
+                            Bids = e.Bids.OrderByDescending(q => q.Price).Take(OrderBookDepth).Select(s => $"{s.Price} : {s.Volume}")
                         }, 
                         Formatting.Indented));
 

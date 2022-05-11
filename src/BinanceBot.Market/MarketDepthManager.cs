@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Binance.Net.Interfaces.Clients;
 using Binance.Net.Objects.Models.Spot;
+using BinanceBot.Market.Core;
 using CryptoExchange.Net.Objects;
 
 

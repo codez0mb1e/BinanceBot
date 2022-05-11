@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Binance.Net.Enums;
 using Binance.Net.Interfaces.Clients;
 using Binance.Net.Objects.Models.Spot;
+using BinanceBot.Market.Core;
+using BinanceBot.Market.Strategies;
 using CryptoExchange.Net.Objects;
 using NLog;
 
@@ -87,28 +89,36 @@ namespace BinanceBot.Market
         {
             if (order == null) throw new ArgumentNullException(nameof(order));
 
-            #if TEST_ORDER_CREATION_MODE
+#if TEST_ORDER_CREATION_MODE
             WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.SpotApi.Trading.PlaceTestOrderAsync(
-                order.Symbol, order.Side, order.OrderType, order.Quantity,
-                newClientOrderId:order.NewClientOrderId, 
-                receiveWindow:order.RecvWindow)
-                .ConfigureAwait(false);
-            #else
-            WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.SpotApi.Trading.PlaceOrderAsync(
                     // general
-                    order.Symbol, 
-                    order.Side, 
+                    order.Symbol,
+                    order.Side,
                     order.OrderType,
                     // price-quantity
-                    price: order.Price,
+                    price: order.Price, 
                     quantity: order.Quantity,
                     // metadata
                     newClientOrderId: order.NewClientOrderId,
                     timeInForce: order.TimeInForce,
                     receiveWindow: order.RecvWindow)
                 .ConfigureAwait(false);
-            #endif
-            
+#else
+            WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.SpotApi.Trading.PlaceOrderAsync(
+                    // general
+                    order.Symbol,
+                    order.Side,
+                    order.OrderType,
+                    // price-quantity
+                    price: order.Price, 
+                    quantity: order.Quantity,
+                    // metadata
+                    newClientOrderId: order.NewClientOrderId,
+                    timeInForce: order.TimeInForce,
+                    receiveWindow: order.RecvWindow)
+                .ConfigureAwait(false);
+#endif
+
             if (response.Error != null)
                 Logger.Error(response.Error.Message);
 
@@ -160,9 +170,9 @@ namespace BinanceBot.Market
                     OrderType = SpotOrderType.Limit,
                     // price-quantity
                     Price = Decimal.Round(q.Price, decimals: MarketStrategy.Config.PricePrecision),
-                    Quantity = Decimal.Round(q.Volume, decimals: MarketStrategy.Config.QuoteAssetPrecision),,
+                    Quantity = Decimal.Round(q.Volume, decimals: MarketStrategy.Config.BaseAssetPrecision),
                     // metadata
-                    NewClientOrderId = "test",
+                    NewClientOrderId = $"market-bot-{Guid.NewGuid():N}".Substring(0, 36),
                     TimeInForce = TimeInForce.GoodTillCanceled,
                     RecvWindow = (int)MarketStrategy.Config.ReceiveWindow.TotalMilliseconds
                 };
