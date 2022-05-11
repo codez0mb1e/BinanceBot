@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Binance.Net.Interfaces;
-using Binance.Net.Objects.Spot.MarketData;
+using Binance.Net.Interfaces.Clients;
+using Binance.Net.Objects.Models.Spot;
 using CryptoExchange.Net.Objects;
 
 
@@ -56,7 +56,7 @@ namespace BinanceBot.Market
             if (limit <= 0)
                 throw new ArgumentOutOfRangeException(nameof(limit));
 
-            WebCallResult<BinanceOrderBook> response = await _restClient.Spot.Market.GetOrderBookAsync(marketDepth.Symbol, limit);
+            WebCallResult<BinanceOrderBook> response = await _restClient.SpotApi.ExchangeData.GetOrderBookAsync(marketDepth.Symbol, limit);
             BinanceOrderBook orderBook = response.Data;
 
             marketDepth.UpdateDepth(orderBook.Asks, orderBook.Bids, orderBook.LastUpdateId);
@@ -72,7 +72,7 @@ namespace BinanceBot.Market
             if (marketDepth == null)
                 throw new ArgumentNullException(nameof(marketDepth));
 
-            _webSocketClient.Spot.SubscribeToOrderBookUpdatesAsync(
+            _webSocketClient.SpotStreams.SubscribeToOrderBookUpdatesAsync(
                 marketDepth.Symbol,
                 1000, 
                 marketData => marketDepth.UpdateDepth(marketData.Data.Asks, marketData.Data.Bids, marketData.Data.LastUpdateId));
