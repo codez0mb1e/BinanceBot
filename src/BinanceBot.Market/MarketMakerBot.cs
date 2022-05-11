@@ -4,10 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Binance.Net.Enums;
-using Binance.Net.Interfaces;
-using Binance.Net.Objects.Spot.SpotData;
-using BinanceBot.Market.Core;
-using BinanceBot.Market.Strategies;
+using Binance.Net.Interfaces.Clients;
+using Binance.Net.Objects.Models.Spot;
 using CryptoExchange.Net.Objects;
 using NLog;
 
@@ -50,11 +48,18 @@ namespace BinanceBot.Market
 
         public override async Task ValidateServerTimeAsync()
         {
-            var exchangeServerTimeResult = await _binanceRestClient.Spot.System.GetServerTimeAsync().ConfigureAwait(false);
-            TimeSpan delay = exchangeServerTimeResult.Data.Subtract(DateTime.UtcNow);
-
-            if (delay > MarketStrategy.Config.ReceiveWindow)
-                Logger.Warn($"Exchange server time doesn't match with local time. Current delay {delay.TotalSeconds} ms");
+            CallResult<long> testConnectResponse = await _binanceRestClient.SpotApi.ExchangeData.PingAsync().ConfigureAwait(false);
+            
+            if (testConnectResponse.Error != null) 
+                Logger.Error(testConnectResponse.Error.Message);
+            else
+            {
+                string msg = $"Connection was established successfully. Approximate ping time: {testConnectResponse.Data} ms";
+                if (testConnectResponse.Data > 1000)
+                    Logger.Warn(msg);
+                else
+                    Logger.Info(msg);
+            }
         }
 
 
@@ -63,7 +68,7 @@ namespace BinanceBot.Market
             if (string.IsNullOrEmpty(symbol))
                 throw new ArgumentException("Invalid symbol value", nameof(symbol));
 
-            var response = await _binanceRestClient.Spot.Order.GetOpenOrdersAsync(symbol).ConfigureAwait(false);
+            var response = await _binanceRestClient.SpotApi.Trading.GetOpenOrdersAsync(symbol).ConfigureAwait(false);
             return response.Data;
         }
 
@@ -74,7 +79,7 @@ namespace BinanceBot.Market
                 throw new ArgumentNullException(nameof(orders));
 
             foreach (var order in orders)
-                await _binanceRestClient.Spot.Order.CancelOrderAsync(orderId: order.OrderId, origClientOrderId: order.ClientOrderId, symbol: order.Symbol).ConfigureAwait(false);
+                await _binanceRestClient.SpotApi.Trading.CancelOrderAsync(orderId: order.Id, origClientOrderId: order.ClientOrderId, symbol: order.Symbol).ConfigureAwait(false);
         }
 
 
@@ -83,25 +88,23 @@ namespace BinanceBot.Market
             if (order == null) throw new ArgumentNullException(nameof(order));
 
             #if TEST_ORDER_CREATION_MODE
-            WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.Spot.Order.PlaceTestOrderAsync(
-                    symbol: order.Symbol, 
-                    side: order.Side, 
-                    type: order.Type, 
-                    price: order.Price,
-                    quantity: order.Quantity,
-                    timeInForce: order.TimeInForce,
-                    newClientOrderId: order.NewClientOrderId, 
-                    receiveWindow:order.RecvWindow)
+            WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.SpotApi.Trading.PlaceTestOrderAsync(
+                order.Symbol, order.Side, order.OrderType, order.Quantity,
+                newClientOrderId:order.NewClientOrderId, 
+                receiveWindow:order.RecvWindow)
                 .ConfigureAwait(false);
             #else
-            WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.Spot.Order.PlaceOrderAsync(
-                    symbol: order.Symbol,
-                    side: order.Side,
-                    type: order.Type,
+            WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.SpotApi.Trading.PlaceOrderAsync(
+                    // general
+                    order.Symbol, 
+                    order.Side, 
+                    order.OrderType,
+                    // price-quantity
                     price: order.Price,
                     quantity: order.Quantity,
-                    timeInForce: order.TimeInForce,
+                    // metadata
                     newClientOrderId: order.NewClientOrderId,
+                    timeInForce: order.TimeInForce,
                     receiveWindow: order.RecvWindow)
                 .ConfigureAwait(false);
             #endif
@@ -151,12 +154,16 @@ namespace BinanceBot.Market
             {
                 var newOrderRequest = new CreateOrderRequest
                 {
+                    // general
                     Symbol = Symbol,
-                    Quantity = Decimal.Round(q.Volume, decimals: MarketStrategy.Config.QuoteAssetPrecision),
-                    Price = Decimal.Round(q.Price, decimals: MarketStrategy.Config.PricePrecision),
                     Side = q.Direction,
-                    Type = OrderType.Limit,
-                    TimeInForce = TimeInForce.GoodTillCancel,
+                    OrderType = SpotOrderType.Limit,
+                    // price-quantity
+                    Price = Decimal.Round(q.Price, decimals: MarketStrategy.Config.PricePrecision),
+                    Quantity = Decimal.Round(q.Volume, decimals: MarketStrategy.Config.QuoteAssetPrecision),,
+                    // metadata
+                    NewClientOrderId = "test",
+                    TimeInForce = TimeInForce.GoodTillCanceled,
                     RecvWindow = (int)MarketStrategy.Config.ReceiveWindow.TotalMilliseconds
                 };
 

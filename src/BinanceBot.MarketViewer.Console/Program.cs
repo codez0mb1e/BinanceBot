@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using Binance.Net;
-using Binance.Net.Interfaces;
+using Binance.Net.Clients;
+using Binance.Net.Interfaces.Clients;
 using Binance.Net.Objects;
 using BinanceBot.Market;
 using BinanceBot.Market.Core;
@@ -28,6 +29,7 @@ namespace BinanceBot.MarketViewer.Console
         #endregion
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        private static readonly ApiCredentials Credentials = new(Key, Secret);
 
 
         static async Task Main(string[] args)
@@ -54,12 +56,12 @@ namespace BinanceBot.MarketViewer.Console
                 Clear();
 
                 WriteLine("Price : Volume");
-
                 WriteLine(
                     JsonConvert.SerializeObject(
                         new
                         {
                             LastUpdate = e.UpdateTime,
+
                             Asks = e.Asks.Reverse().Take(OrderBookDepth).Select(s => $"{s.Price} : {s.Volume}"),
                             Bids = e.Bids.Take(OrderBookDepth).Select(s => $"{s.Price} : {s.Volume}")
                         }, 

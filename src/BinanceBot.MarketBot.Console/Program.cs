@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
-using Binance.Net;
-using Binance.Net.Enums;
-using Binance.Net.Interfaces;
+using Binance.Net.Clients;
+using Binance.Net.Interfaces.Clients;
 using Binance.Net.Objects;
 using BinanceBot.Market;
 using BinanceBot.Market.Configurations;
@@ -28,7 +26,7 @@ namespace BinanceBot.MarketBot.Console
         #endregion
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        
+
 
         static async Task Main(string[] args)
         {

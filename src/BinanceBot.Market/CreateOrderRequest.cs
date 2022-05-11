@@ -11,7 +11,7 @@ namespace BinanceBot.Market
 
         public OrderSide Side { get; set; }
 
-        public OrderType Type { get; set; }
+        public SpotOrderType OrderType { get; set; }
 
         public TimeInForce? TimeInForce { get; set; }
 
@@ -24,6 +24,7 @@ namespace BinanceBot.Market
         public decimal? StopPrice { get; set; }
 
         public decimal? IcebergQuantity { get; set; }
+
         public int? RecvWindow { get; set; }
     }
 }

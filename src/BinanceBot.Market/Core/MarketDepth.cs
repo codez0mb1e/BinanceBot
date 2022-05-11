@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Binance.Net.Enums;
-using Binance.Net.Objects;
+using Binance.Net.Objects.Models;
 using BinanceBot.Market.Utility;
 
 namespace BinanceBot.Market.Core
@@ -100,7 +100,7 @@ namespace BinanceBot.Market.Core
             if (asks == null && bids == null) return;
 
 
-            void UpdateOrderBook(IEnumerable<BinanceOrderBookEntry> updates, IDictionary<decimal, decimal> orders)
+            static void UpdateOrderBook(IEnumerable<BinanceOrderBookEntry> updates, IDictionary<decimal, decimal> orders)
             {
                 if (orders == null) throw new ArgumentNullException(nameof(orders));
                 if (updates == null) return;
