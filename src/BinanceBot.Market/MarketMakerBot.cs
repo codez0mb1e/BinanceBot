@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Binance.Net.Enums;
 using Binance.Net.Interfaces.Clients;
 using Binance.Net.Objects.Models.Spot;
+using BinanceBot.Market.Core;
+using BinanceBot.Market.Strategies;
 using CryptoExchange.Net.Objects;
 using NLog;
 
@@ -89,9 +91,17 @@ namespace BinanceBot.Market
 
             #if TEST_ORDER_CREATION_MODE
             WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.SpotApi.Trading.PlaceTestOrderAsync(
-                order.Symbol, order.Side, order.OrderType, order.Quantity,
-                newClientOrderId:order.NewClientOrderId, 
-                receiveWindow:order.RecvWindow)
+                    // general
+                    order.Symbol,
+                    order.Side,
+                    order.OrderType,
+                    // price-quantity
+                    price: order.Price,
+                    quantity: order.Quantity,
+                    // metadata
+                    newClientOrderId: order.NewClientOrderId,
+                    timeInForce: order.TimeInForce,
+                    receiveWindow: order.RecvWindow)
                 .ConfigureAwait(false);
             #else
             WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.SpotApi.Trading.PlaceOrderAsync(
@@ -160,7 +170,7 @@ namespace BinanceBot.Market
                     OrderType = SpotOrderType.Limit,
                     // price-quantity
                     Price = Decimal.Round(q.Price, decimals: MarketStrategy.Config.PricePrecision),
-                    Quantity = Decimal.Round(q.Volume, decimals: MarketStrategy.Config.QuoteAssetPrecision),,
+                    Quantity = Decimal.Round(q.Volume, decimals: MarketStrategy.Config.QuoteAssetPrecision),
                     // metadata
                     NewClientOrderId = "test",
                     TimeInForce = TimeInForce.GoodTillCanceled,
