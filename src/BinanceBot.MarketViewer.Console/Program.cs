@@ -28,7 +28,6 @@ namespace BinanceBot.MarketViewer.Console
         #endregion
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        private static readonly ApiCredentials Credentials = new(ApiKey, Secret);
 
 
         static async Task Main(string[] args)
@@ -61,8 +60,8 @@ namespace BinanceBot.MarketViewer.Console
                         {
                             LastUpdate = e.UpdateTime,
 
-                            Asks = e.Asks.Reverse().Take(OrderBookDepth).Select(s => $"{s.Price} : {s.Volume}"),
-                            Bids = e.Bids.Take(OrderBookDepth).Select(s => $"{s.Price} : {s.Volume}")
+                            Asks = e.Asks.OrderByDescending(q => q.Price).Take(OrderBookDepth).Select(s => $"{s.Price} : {s.Volume}"),
+                            Bids = e.Bids.OrderByDescending(q => q.Price).Take(OrderBookDepth).Select(s => $"{s.Price} : {s.Volume}")
                         }, 
                         Formatting.Indented));
 
