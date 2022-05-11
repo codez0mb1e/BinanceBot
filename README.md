@@ -43,7 +43,7 @@ The solution doesn’t contain any `Unit Tests`/`Integration Tests`, which is a 
 
 ## Requirements
 
-- .NET Core 5.0.
+- .NET 6.0.
 
 
 ## References
