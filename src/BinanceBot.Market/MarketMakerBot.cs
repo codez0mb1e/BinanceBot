@@ -96,8 +96,16 @@ namespace BinanceBot.Market
                 .ConfigureAwait(false);
 #else
             WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.SpotApi.Trading.PlaceOrderAsync(
-                    order.Symbol, order.Side, order.OrderType, order.Quantity,
+                    // general
+                    order.Symbol, 
+                    order.Side, 
+                    order.OrderType,
+                    // price-quantity
+                    price: order.Price,
+                    quantity: order.Quantity,
+                    // metadata
                     newClientOrderId: order.NewClientOrderId,
+                    timeInForce: order.TimeInForce,
                     receiveWindow: order.RecvWindow)
                 .ConfigureAwait(false);
 #endif
@@ -144,12 +152,17 @@ namespace BinanceBot.Market
             {
                 var newOrderRequest = new CreateOrderRequest
                 {
+                    // general
                     Symbol = Symbol,
-                    Quantity = q.Volume,
-                    Price = q.Price,
                     Side = q.Direction,
                     OrderType = SpotOrderType.Limit,
-                    TimeInForce = TimeInForce.GoodTillCanceled // 'Good Till Cancelled' marketStrategy 
+                    // price-quantity
+                    Price = q.Price,
+                    Quantity = q.Volume,
+                    // metadata
+                    NewClientOrderId = "test",
+                    TimeInForce = TimeInForce.GoodTillCanceled,
+                    RecvWindow = 1000
                 };
 
                 await CreateOrderAsync(newOrderRequest);
