@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Binance.Net.Clients;
 using Binance.Net.Interfaces.Clients;
 using Binance.Net.Objects;
@@ -19,37 +20,39 @@ namespace BinanceBot.MarketBot.Console
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private static readonly ApiCredentials Credentials = new (Key, Secret);
 
+
         static async Task Main(string[] args)
         {
-            // set bot settings
-            const string token = "SOLUSDT"; // WARN: Set necessary token here
+            // 1. Set up bot settings
+            const string token = "SOL/USDT"; // WARN: set up necessary token here
 
-            IBinanceClient binanceRestClient = new BinanceClient(
-                new BinanceClientOptions { ApiCredentials = Credentials }
-                );
-
-            var strategyConfig = new MarketStrategyConfiguration
+            var strategyConfig = new MarketStrategyConfiguration // WARN: set up trading strategy settings here
             {
-                MinOrderVolume = 0.0001M,
-                MaxOrderVolume = 0.001M,
+                MinOrderVolume = 0.01M,
+                MaxOrderVolume = 0.05M,
                 TradeWhenSpreadGreaterThan = .05M
             };
 
 
-            // create bot
+
+            // 2. Init bot
+            IBinanceClient binanceRestClient = new BinanceClient(
+                new BinanceClientOptions { ApiCredentials = Credentials }
+                );
+
             IBinanceSocketClient binanceSocketClient = new BinanceSocketClient(
                 new BinanceSocketClientOptions { ApiCredentials = Credentials }
                 );
 
             IMarketBot bot = new MarketMakerBot(
-                token,
+                token.Replace("/", String.Empty),
                 new NaiveMarketMakerStrategy(strategyConfig, Logger),
                 binanceRestClient,
                 binanceSocketClient,
                 Logger);
 
 
-            // start bot
+            // 3. Run bot
             try
             {
                 await bot.RunAsync();

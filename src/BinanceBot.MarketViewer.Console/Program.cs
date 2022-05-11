@@ -26,19 +26,21 @@ namespace BinanceBot.MarketViewer.Console
 
         static async Task Main(string[] args)
         {
-            const string token = "SOLUSDT"; // WARN: Set necessary token here
+            // 1. Set up bot settings
+            const string token = "SOL/USDT"; // WARN: set up necessary token here
+            const int marketDepthLimit = 10; // Set up market depth limit here
 
+
+            // 2. Init bot
             IBinanceClient binanceRestClient = new BinanceClient(
                 new BinanceClientOptions { ApiCredentials = Credentials }
             );
 
-
-            var marketDepth = new MarketDepth(token);
-
             await TestConnectionAsync(binanceRestClient);
 
 
-            const int marketDepthLimit = 10;
+            var marketDepth = new MarketDepth(token.Replace("/", String.Empty));
+
             marketDepth.MarketDepthChanged += (sender, e) =>
             {
                 Clear();
@@ -66,6 +68,8 @@ namespace BinanceBot.MarketViewer.Console
 
             var marketDepthManager = new MarketDepthManager(binanceRestClient, binanceSocketClient);
 
+
+            // 3. Run bot
             // build order book
             await marketDepthManager.BuildAsync(marketDepth);
             // stream order book updates
