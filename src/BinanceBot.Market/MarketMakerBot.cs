@@ -96,7 +96,7 @@ namespace BinanceBot.Market
                     order.Side,
                     order.OrderType,
                     // price-quantity
-                    price: order.Price,
+                    price: order.Price, 
                     quantity: order.Quantity,
                     // metadata
                     newClientOrderId: order.NewClientOrderId,
@@ -170,9 +170,9 @@ namespace BinanceBot.Market
                     OrderType = SpotOrderType.Limit,
                     // price-quantity
                     Price = Decimal.Round(q.Price, decimals: MarketStrategy.Config.PricePrecision),
-                    Quantity = Decimal.Round(q.Volume, decimals: MarketStrategy.Config.QuoteAssetPrecision),
+                    Quantity = Decimal.Round(q.Volume, decimals: MarketStrategy.Config.BaseAssetPrecision),
                     // metadata
-                    NewClientOrderId = "test",
+                    NewClientOrderId = $"market-bot-{Guid.NewGuid():N}".Substring(0, 36),
                     TimeInForce = TimeInForce.GoodTillCanceled,
                     RecvWindow = (int)MarketStrategy.Config.ReceiveWindow.TotalMilliseconds
                 };
