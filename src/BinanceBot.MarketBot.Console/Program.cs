@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
-using Binance.Net;
-using Binance.Net.Interfaces;
+using Binance.Net.Clients;
+using Binance.Net.Interfaces.Clients;
 using Binance.Net.Objects;
 using BinanceBot.Market;
 using CryptoExchange.Net.Authentication;
@@ -17,29 +17,29 @@ namespace BinanceBot.MarketBot.Console
         private const string Secret = "*****";
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-
+        private static readonly ApiCredentials Credentials = new (Key, Secret);
 
         static async Task Main(string[] args)
         {
             // set bot settings
-            const string token = "ETHBTC"; // WARN: Set necessary token here
+            const string token = "SOLUSDT"; // WARN: Set necessary token here
 
-            IBinanceClient binanceRestClient = new BinanceClient(new BinanceClientOptions()
-            {
-                ApiCredentials = new ApiCredentials(Key, Secret)
-            });
+            IBinanceClient binanceRestClient = new BinanceClient(
+                new BinanceClientOptions { ApiCredentials = Credentials }
+                );
 
             var strategyConfig = new MarketStrategyConfiguration
             {
                 MinOrderVolume = 0.0001M,
                 MaxOrderVolume = 0.001M,
-                TradeWhenSpreadGreaterThan = .001M
+                TradeWhenSpreadGreaterThan = .05M
             };
 
 
             // create bot
-            IBinanceSocketClient binanceSocketClient = new BinanceSocketClient(new BinanceSocketClientOptions());
-            binanceSocketClient.SetApiCredentials(Key, Secret);
+            IBinanceSocketClient binanceSocketClient = new BinanceSocketClient(
+                new BinanceSocketClientOptions { ApiCredentials = Credentials }
+                );
 
             IMarketBot bot = new MarketMakerBot(
                 token,
