@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Binance.Net.Enums;
-using Binance.Net.Objects;
+using Binance.Net.Objects.Models;
 using BinanceBot.Market.Utility;
 
 
@@ -87,17 +87,16 @@ namespace BinanceBot.Market
             if (asks == null && bids == null) return;
 
 
-            void UpdateOrderBook(IEnumerable<BinanceOrderBookEntry> updates, IDictionary<decimal, decimal> orders)
+            static void UpdateOrderBook(IEnumerable<BinanceOrderBookEntry> updates, IDictionary<decimal, decimal> orders)
             {
-                if (updates != null)
+                if (updates == null) return;
+
+                foreach (BinanceOrderBookEntry t in updates)
                 {
-                    foreach (BinanceOrderBookEntry t in updates)
-                    {
-                        if (t.Quantity != IgnoreVolumeValue)
-                            orders[t.Price] = t.Quantity;
-                        else
-                            if (orders.ContainsKey(t.Price)) orders.Remove(t.Price);
-                    }
+                    if (t.Quantity != IgnoreVolumeValue)
+                        orders[t.Price] = t.Quantity;
+                    else
+                    if (orders.ContainsKey(t.Price)) orders.Remove(t.Price);
                 }
             }
 

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Binance.Net.Objects.Spot.SpotData;
+using Binance.Net.Objects.Models.Spot;
 
 
 namespace BinanceBot.Market

@@ -4,8 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Binance.Net.Enums;
-using Binance.Net.Interfaces;
-using Binance.Net.Objects.Spot.SpotData;
+using Binance.Net.Interfaces.Clients;
+using Binance.Net.Objects.Models.Spot;
 using CryptoExchange.Net.Objects;
 using NLog;
 
@@ -50,7 +50,7 @@ namespace BinanceBot.Market
         {
             Logger.Info("Testing connection...");
 
-            CallResult<long> testConnectResponse = await _binanceRestClient.PingAsync().ConfigureAwait(false);
+            CallResult<long> testConnectResponse = await _binanceRestClient.SpotApi.ExchangeData.PingAsync().ConfigureAwait(false);
             
             if (testConnectResponse.Error != null) 
                 Logger.Error(testConnectResponse.Error.Message);
@@ -70,7 +70,7 @@ namespace BinanceBot.Market
             if (string.IsNullOrEmpty(symbol))
                 throw new ArgumentException("Invalid symbol value", nameof(symbol));
 
-            var response = await _binanceRestClient.Spot.Order.GetOpenOrdersAsync(symbol).ConfigureAwait(false);
+            var response = await _binanceRestClient.SpotApi.Trading.GetOpenOrdersAsync(symbol).ConfigureAwait(false);
             return response.Data;
         }
 
@@ -81,7 +81,7 @@ namespace BinanceBot.Market
                 throw new ArgumentNullException(nameof(orders));
 
             foreach (var order in orders)
-                await _binanceRestClient.Spot.Order.CancelOrderAsync(orderId: order.OrderId, origClientOrderId: order.ClientOrderId, symbol: order.Symbol).ConfigureAwait(false);
+                await _binanceRestClient.SpotApi.Trading.CancelOrderAsync(orderId: order.Id, origClientOrderId: order.ClientOrderId, symbol: order.Symbol).ConfigureAwait(false);
         }
 
 
@@ -89,15 +89,23 @@ namespace BinanceBot.Market
         {
 
 #if TEST_ORDER_CREATION_MODE
-            WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.Spot.Order.PlaceTestOrderAsync(
-                order.Symbol, order.Side, order.Type, order.Quantity,
+            WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.SpotApi.Trading.PlaceTestOrderAsync(
+                order.Symbol, order.Side, order.OrderType, order.Quantity,
                 newClientOrderId:order.NewClientOrderId, 
                 receiveWindow:order.RecvWindow)
                 .ConfigureAwait(false);
 #else
-            WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.Spot.Order.PlaceOrderAsync(
-                    order.Symbol, order.Side, order.Type, order.Quantity,
+            WebCallResult<BinancePlacedOrder> response = await _binanceRestClient.SpotApi.Trading.PlaceOrderAsync(
+                    // general
+                    order.Symbol, 
+                    order.Side, 
+                    order.OrderType,
+                    // price-quantity
+                    price: order.Price,
+                    quantity: order.Quantity,
+                    // metadata
                     newClientOrderId: order.NewClientOrderId,
+                    timeInForce: order.TimeInForce,
                     receiveWindow: order.RecvWindow)
                 .ConfigureAwait(false);
 #endif
@@ -144,12 +152,17 @@ namespace BinanceBot.Market
             {
                 var newOrderRequest = new CreateOrderRequest
                 {
+                    // general
                     Symbol = Symbol,
-                    Quantity = q.Volume,
-                    Price = q.Price,
                     Side = q.Direction,
-                    Type = OrderType.Limit,
-                    TimeInForce = TimeInForce.GoodTillCancel // 'Good Till Cancelled' marketStrategy 
+                    OrderType = SpotOrderType.Limit,
+                    // price-quantity
+                    Price = q.Price,
+                    Quantity = q.Volume,
+                    // metadata
+                    NewClientOrderId = "test",
+                    TimeInForce = TimeInForce.GoodTillCanceled,
+                    RecvWindow = 1000
                 };
 
                 await CreateOrderAsync(newOrderRequest);
