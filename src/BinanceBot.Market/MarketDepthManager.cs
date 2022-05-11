@@ -14,7 +14,7 @@ namespace BinanceBot.Market
     /// How to manage a local order book correctly [1]: 
     ///    1. Open a stream to wss://stream.binance.com:9443/ws/bnbbtc@depth
     ///    2. Buffer the events you receive from the stream
-    ///    3. Get a depth snapshot from https://www.binance.com/api/v1/depth?symbol=BNBBTC&amp;limit=1000
+    /// -> 3. Get a depth snapshot from https://www.binance.com/api/v1/depth?symbol=BNBBTC&amp;limit=1000
     ///    4. Drop any event where u is less or equal lastUpdateId in the snapshot
     ///    5. The first processed should have U less or equal lastUpdateId+1 AND u equal or greater lastUpdateId+1
     ///    6. While listening to the stream, each new event's U should be equal to the previous event's u+1
@@ -49,7 +49,7 @@ namespace BinanceBot.Market
         /// </summary>
         /// <param name="marketDepth">Market depth</param>
         /// <param name="limit">Limit of returned orders count</param>
-        public async Task BuildAsync(MarketDepth marketDepth, int limit = 100)
+        public async Task BuildAsync(MarketDepth marketDepth, short limit = 10)
         {
             if (marketDepth == null)
                 throw new ArgumentNullException(nameof(marketDepth));
@@ -67,14 +67,15 @@ namespace BinanceBot.Market
         /// Stream <see cref="MarketDepth"/> updates
         /// </summary>
         /// <param name="marketDepth">Market depth</param>
-        public void StreamUpdates(MarketDepth marketDepth)
+        /// <param name="updateInterval"></param>
+        public void StreamUpdates(MarketDepth marketDepth, TimeSpan? updateInterval = default)
         {
             if (marketDepth == null)
                 throw new ArgumentNullException(nameof(marketDepth));
 
             _webSocketClient.SpotStreams.SubscribeToOrderBookUpdatesAsync(
                 marketDepth.Symbol,
-                1000, 
+                (int)updateInterval?.TotalMilliseconds, 
                 marketData => marketDepth.UpdateDepth(marketData.Data.Asks, marketData.Data.Bids, marketData.Data.LastUpdateId));
         }
     }

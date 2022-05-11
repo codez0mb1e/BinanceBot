@@ -6,6 +6,7 @@ using Binance.Net.Clients;
 using Binance.Net.Interfaces.Clients;
 using Binance.Net.Objects;
 using BinanceBot.Market;
+using BinanceBot.Market.Core;
 using CryptoExchange.Net.Authentication;
 using Newtonsoft.Json;
 
@@ -14,11 +15,18 @@ using static System.Console;
 
 namespace BinanceBot.MarketViewer.Console
 {
-    public class Program
+    internal static class Program
     {
+        #region Bot Settings
         // WARN: Set your credentials here here 
-        private const string Key = "******";
-        private const string Secret = "*****";
+        private const string ApiKey = "***";
+        private const string Secret = "***";
+
+        // WARN: Set necessary token here
+        private const string Symbol = "DOGEBTC";
+        private const int OrderBookDepth = 10;
+        private static readonly TimeSpan? OrderBookUpdateLimit = TimeSpan.FromMilliseconds(1000);
+        #endregion
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private static readonly ApiCredentials Credentials = new(Key, Secret);
@@ -26,21 +34,23 @@ namespace BinanceBot.MarketViewer.Console
 
         static async Task Main(string[] args)
         {
-            // 1. Set up bot settings
-            const string token = "SOL/USDT"; // WARN: set up necessary token here
-            const int marketDepthLimit = 10; // Set up market depth limit here
+            // 1. create connections with exchange
+            var credentials = new ApiCredentials(ApiKey, Secret);
+            using IBinanceClient binanceRestClient = new BinanceClient(new BinanceClientOptions { ApiCredentials = credentials });
+            using IBinanceSocketClient binanceSocketClient = new BinanceSocketClient(new BinanceSocketClientOptions { ApiCredentials = credentials });
 
 
-            // 2. Init bot
-            IBinanceClient binanceRestClient = new BinanceClient(
-                new BinanceClientOptions { ApiCredentials = Credentials }
-            );
-
-            await TestConnectionAsync(binanceRestClient);
+            // 2. test connection
+            Logger.Info("Testing connection...");
+            var pingResult = await binanceRestClient.PingAsync();
+            Logger.Info($"Ping time: {pingResult.Data} ms");
 
 
-            var marketDepth = new MarketDepth(token.Replace("/", String.Empty));
+            // 3. get order book
+            var marketDepthManager = new MarketDepthManager(binanceRestClient, binanceSocketClient);
+            var marketDepth = new MarketDepth(Symbol);
 
+ 
             marketDepth.MarketDepthChanged += (sender, e) =>
             {
                 Clear();
@@ -51,8 +61,9 @@ namespace BinanceBot.MarketViewer.Console
                         new
                         {
                             LastUpdate = e.UpdateTime,
-                            Asks = e.Asks.Take(marketDepthLimit).Reverse().Select(s => $"{s.Price} : {s.Volume}"),
-                            Bids = e.Bids.Take(marketDepthLimit).Select(s => $"{s.Price} : {s.Volume}")
+
+                            Asks = e.Asks.Reverse().Take(OrderBookDepth).Select(s => $"{s.Price} : {s.Volume}"),
+                            Bids = e.Bids.Take(OrderBookDepth).Select(s => $"{s.Price} : {s.Volume}")
                         }, 
                         Formatting.Indented));
 
@@ -62,44 +73,14 @@ namespace BinanceBot.MarketViewer.Console
             };
 
 
-            IBinanceSocketClient binanceSocketClient = new BinanceSocketClient(
-                new BinanceSocketClientOptions { ApiCredentials = Credentials }
-            );
-
-            var marketDepthManager = new MarketDepthManager(binanceRestClient, binanceSocketClient);
-
-
-            // 3. Run bot
             // build order book
-            await marketDepthManager.BuildAsync(marketDepth);
+            await marketDepthManager.BuildAsync(marketDepth, OrderBookDepth);
             // stream order book updates
-            marketDepthManager.StreamUpdates(marketDepth);
+            marketDepthManager.StreamUpdates(marketDepth, OrderBookUpdateLimit);
 
 
             WriteLine("Press Enter to exit...");
             ReadLine();
-        }
-
-
-
-        private static async Task TestConnectionAsync(IBinanceClient binanceRestClient, CancellationToken ct = default)
-        {
-            if (binanceRestClient == null) throw new ArgumentNullException(nameof(binanceRestClient));
-
-            Logger.Info("Testing connection...");
-
-            var testConnectResponse = await binanceRestClient.SpotApi.ExchangeData.PingAsync(ct).ConfigureAwait(false);
-
-            if (testConnectResponse.Error != null)
-                Logger.Error(testConnectResponse.Error.Message);
-            else
-            {
-                string msg = $"Connection was established successfully. Approximate ping time: {testConnectResponse.Data} ms";
-                if (testConnectResponse.Data > 1000)
-                    Logger.Warn(msg);
-                else
-                    Logger.Info(msg);
-            }
         }
     }
 }
