@@ -6,7 +6,6 @@ using Binance.Net.Interfaces.Clients;
 using Binance.Net.Objects;
 using BinanceBot.Market;
 using BinanceBot.Market.Core;
-using CryptoExchange.Net.Authentication;
 using Newtonsoft.Json;
 
 using static System.Console;
@@ -33,7 +32,7 @@ namespace BinanceBot.MarketViewer.Console
         static async Task Main(string[] args)
         {
             // 1. create connections with exchange
-            var credentials = new ApiCredentials(ApiKey, Secret);
+            var credentials = new BinanceApiCredentials(ApiKey, Secret);
             using IBinanceClient binanceRestClient = new BinanceClient(new BinanceClientOptions { ApiCredentials = credentials });
             using IBinanceSocketClient binanceSocketClient = new BinanceSocketClient(new BinanceSocketClientOptions { ApiCredentials = credentials });
 
