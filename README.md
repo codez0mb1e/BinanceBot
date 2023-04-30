@@ -11,6 +11,8 @@ Solution contains two console projects:
 - The `BinanceBot.MarketViewer.Console` project: __Order book updating in near-real time__ (via _Binance WebSocket API_).
 - The `BinanceBot.MarketBot.Console` project: __Create and cancel orders__ (via _Binance REST API_) depends on current Market Depth.
 
+![alt text][/docs/media/ethusdt_orderbook.gif]
+
 In picture below _BinanceBot create order to Order Book only if price spread by ETH/BTC greater than 0.2%_.
 
 ![alt text][binance_bot_running]
