@@ -3,12 +3,6 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
-    <Version>0.3.0</Version>
-    <Authors>Dmitry Petukhov</Authors>
-    <Product>BinanceBot</Product>
-    <Copyright>(c) 2023, Dmitry Petukhov.</Copyright>
-    <PackageProjectUrl>http://0xcode.in/</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/codez0mb1e/BinanceBot</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
