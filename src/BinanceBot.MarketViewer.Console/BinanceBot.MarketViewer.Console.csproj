@@ -12,8 +12,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NLog" Version="5.1.4" />
-    <PackageReference Include="Spectre.Console" Version="0.46.0" />
+    <PackageReference Include="NLog" Version="6.0.5" />
+    <PackageReference Include="Spectre.Console" Version="0.53.0" />
   </ItemGroup>
 
   <ItemGroup>
