@@ -1,6 +1,5 @@
 # Market Bot for Binance
 
-[![Status](https://img.shields.io/badge/status-in_active_development-green.svg)](https://github.com/codez0mb1e/BinanceBot/projects/1)
 [![Contributors Welcome](https://img.shields.io/badge/contributing-welcome-blue.svg)](CONTRIBUTING.md)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -20,7 +19,7 @@ Turn off `TEST_ORDER_CREATION_MODE` compilation symbol in [MarketMakerBot.cs](sr
 
 ## Requirements
 
-- .NET 7.0
+- .NET 9.0
 - Binance Account.
 
 ## References
