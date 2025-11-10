@@ -23,7 +23,4 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <Target Name="CheckEnvFileExists" BeforeTargets="Build">
-    <Error Condition="!Exists('.env')" Text="Missing .env file. Please create .env from .env.example before building." />
-  </Target>
 </Project>
