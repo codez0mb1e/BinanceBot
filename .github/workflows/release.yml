@@ -22,6 +22,7 @@ jobs:
     name: Build and push Docker images
 
     runs-on: ubuntu-latest
+    environment: DefaultEnv
 
     env:
       DOCKER_BUILDKIT: 1
