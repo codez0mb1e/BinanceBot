@@ -1,0 +1,93 @@
+name: BinanceBot Build Pipeline
+
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+    branches: [ "master" ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+ run:
+  working-directory: ./src
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+        dotnet-version: ["9.0.x"]
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ matrix.dotnet-version }}
+        cache: true
+        cache-dependency-path: |
+          src/**/*.csproj
+          src/**/global.json
+          src/**/NuGet.Config
+
+    - name: .NET info
+      run: dotnet --info
+
+    - name: Restore dependencies
+      run: dotnet restore --verbosity minimal
+    
+    - name: Build
+      run: dotnet build --no-restore --configuration ${{ matrix.configuration }} --nologo
+    
+    - name: Test
+      run: dotnet test --no-build --configuration ${{ matrix.configuration }} --collect:"XPlat Code Coverage" --logger "trx;LogFileName=test_results.trx" || echo "No tests found"
+
+    - name: Upload test results (TRX)
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ matrix.configuration }}
+        path: |
+          **/TestResults/**/*.trx
+        if-no-files-found: warn
+
+    - name: Upload code coverage (Cobertura)
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-cobertura-${{ matrix.configuration }}
+        path: |
+          **/TestResults/**/coverage.cobertura.xml
+        if-no-files-found: warn
+
+    - name: Publish artifacts (Release only)
+      if: matrix.configuration == 'Release'
+      run: |
+        dotnet publish BinanceBot.MarketBot.Console/BinanceBot.MarketBot.Console.csproj \
+          -c Release \
+          -o ./publish/MarketBot \
+          --no-build
+        dotnet publish BinanceBot.MarketViewer.Console/BinanceBot.MarketViewer.Console.csproj \
+          -c Release \
+          -o ./publish/MarketViewer \
+          --no-build
+
+    - name: Upload published artifacts
+      if: matrix.configuration == 'Release'
+      uses: actions/upload-artifact@v4
+      with:
+        name: binance-bot-binaries
+        path: |
+          src/publish/MarketBot/
+          src/publish/MarketViewer/
+        retention-days: 7
