@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="dotenv.net" Version="4.0.0" />
     <PackageReference Include="NLog" Version="6.0.5" />
     <PackageReference Include="Spectre.Console" Version="0.53.0" />
   </ItemGroup>
@@ -17,6 +18,9 @@
   <ItemGroup>
     <None Update="NLog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update=".env">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

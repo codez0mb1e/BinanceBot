@@ -22,6 +22,31 @@ Turn off `TEST_ORDER_CREATION_MODE` compilation symbol in [MarketMakerBot.cs](sr
 - .NET 9.0
 - Binance Account.
 
+## Setup Instructions
+
+### Setting up API Credentials
+
+Both console applications (`BinanceBot.MarketBot.Console` and `BinanceBot.MarketViewer.Console`) now support environment variables for API credentials using `.env` files.
+
+1. **Copy the example file:**
+   ```bash
+   # For MarketBot
+   cp src/BinanceBot.MarketBot.Console/.env.example src/BinanceBot.MarketBot.Console/.env
+   
+   # For MarketViewer
+   cp src/BinanceBot.MarketViewer.Console/.env.example src/BinanceBot.MarketViewer.Console/.env
+   ```
+
+2. **Edit the `.env` file** with your actual Binance API credentials:
+   ```bash
+   BINANCE_API_KEY=your_actual_api_key_here
+   BINANCE_SECRET=your_actual_secret_key_here
+   ```
+
+3. **Run the application** - it will automatically load the credentials from the `.env` file.
+
+⚠️ **Never commit/share your `.env` file to version control!** It contains sensitive credentials.
+
 ## References
 
 1. [Binance official API docs](https://github.com/binance-exchange/binance-official-api-docs).
