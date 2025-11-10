@@ -1,0 +1,51 @@
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
+ARG BUILD_CONFIGURATION=Release
+ARG PROJECT_NAME=BinanceBot.MarketBot.Console
+WORKDIR /src
+
+# Copy solution and project files for better layer caching
+COPY src/*.sln ./
+COPY src/BinanceBot.Market/*.csproj ./BinanceBot.Market/
+COPY src/BinanceBot.MarketBot.Console/*.csproj ./BinanceBot.MarketBot.Console/
+COPY src/BinanceBot.MarketViewer.Console/*.csproj ./BinanceBot.MarketViewer.Console/
+
+# Restore dependencies as a separate layer
+RUN dotnet restore "${PROJECT_NAME}/${PROJECT_NAME}.csproj" \
+    --runtime linux-musl-x64
+
+# Copy remaining source files
+COPY src/. ./
+
+# Build and publish
+WORKDIR /src/${PROJECT_NAME}
+RUN dotnet publish "${PROJECT_NAME}.csproj" \
+    -c $BUILD_CONFIGURATION \
+    -o /app/publish \
+    --no-restore \
+    --runtime linux-musl-x64 \
+    --self-contained false \
+    /p:UseAppHost=false
+
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS final
+ARG PROJECT_NAME=BinanceBot.MarketBot.Console
+WORKDIR /app
+
+# Create non-root user
+RUN addgroup -g 1000 appuser && \
+    adduser -u 1000 -G appuser -s /bin/sh -D appuser && \
+    chown -R appuser:appuser /app
+
+# Copy published output
+COPY --from=build --chown=appuser:appuser /app/publish .
+
+# Security: Run as non-root
+USER appuser
+
+# Set environment variables
+ENV DOTNET_RUNNING_IN_CONTAINER=true \
+    DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+
+# Note: Set BINANCE_API_KEY and BINANCE_SECRET via environment variables or .env file at runtime
+ENTRYPOINT dotnet "${PROJECT_NAME}.dll"
