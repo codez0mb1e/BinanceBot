@@ -1,0 +1,28 @@
+services:
+  marketbot:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-codez0mb1e}/binancebot-marketbot:latest
+    container_name: binancebot-marketbot
+    restart: unless-stopped
+    environment:
+      - BINANCE_API_KEY=${BINANCE_API_KEY}
+      - BINANCE_SECRET=${BINANCE_SECRET}
+    env_file:
+      - .env
+    networks:
+      - binancebot-network
+
+  marketviewer:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-codez0mb1e}/binancebot-marketviewer:latest
+    container_name: binancebot-marketviewer
+    restart: unless-stopped
+    environment:
+      - BINANCE_API_KEY=${BINANCE_API_KEY}
+      - BINANCE_SECRET=${BINANCE_SECRET}
+    env_file:
+      - .env
+    networks:
+      - binancebot-network
+
+networks:
+  binancebot-network:
+    driver: bridge
