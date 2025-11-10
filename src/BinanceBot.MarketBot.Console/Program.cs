@@ -8,6 +8,7 @@ using Binance.Net.Objects;
 using BinanceBot.Market;
 using BinanceBot.Market.Configurations;
 using BinanceBot.Market.Strategies;
+using dotenv.net;
 
 using static System.Console;
 
@@ -17,10 +18,6 @@ namespace BinanceBot.MarketBot.Console
     internal static class Program
     {
         #region Bot Settings
-        // WARN: set your credentials here here 
-        private const string ApiKey = "***";
-        private const string Secret = "***";
-
         // WARN: set necessary token here
         private const string Symbol = "SOLUSDT";
         private static readonly TimeSpan ReceiveWindow = TimeSpan.FromMilliseconds(1000);
@@ -31,8 +28,15 @@ namespace BinanceBot.MarketBot.Console
 
         static async Task Main(string[] args)
         {
+            // Load .env file first
+            DotEnv.Load();
+
+            // WARN: Set your credentials in .env file
+            var apiKey = Environment.GetEnvironmentVariable("BINANCE_API_KEY") ?? throw new InvalidOperationException("BINANCE_API_KEY environment variable is not set");
+            var secret = Environment.GetEnvironmentVariable("BINANCE_SECRET") ?? throw new InvalidOperationException("BINANCE_SECRET environment variable is not set");
+
             // 1. create connections with exchange
-            var credentials = new BinanceApiCredentials(ApiKey, Secret);
+            var credentials = new BinanceApiCredentials(apiKey, secret);
             using IBinanceClient binanceRestClient = new BinanceClient(new BinanceClientOptions { ApiCredentials = credentials });
             using IBinanceSocketClient binanceSocketClient = new BinanceSocketClient(new BinanceSocketClientOptions { ApiCredentials = credentials });
 
