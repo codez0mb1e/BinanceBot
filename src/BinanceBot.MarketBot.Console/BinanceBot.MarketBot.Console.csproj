@@ -23,4 +23,7 @@
     </None>
   </ItemGroup>
 
+  <Target Name="CheckEnvFileExists" BeforeTargets="Build">
+    <Error Condition="!Exists('.env')" Text="The .env file is missing. Please create it from .env.example before building." />
+  </Target>
 </Project>
