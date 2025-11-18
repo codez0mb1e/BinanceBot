@@ -263,3 +263,6 @@ __pycache__/
 # Environment variables
 .env
 !.env.example
+
+# Logs
+logs/*.log
