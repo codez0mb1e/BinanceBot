@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="dotenv.net" Version="4.0.0" />
-    <PackageReference Include="NLog" Version="6.0.5" />
+    <PackageReference Include="NLog" Version="6.0.6" />
   </ItemGroup>
 
   <ItemGroup>
