@@ -23,7 +23,7 @@ internal static class Program
     // WARN: Set necessary token here
     private const string Symbol = "BNBUSDT";
     private const int OrderBookDepth = 10;
-    private static readonly TimeSpan? OrderBookUpdateLimit = TimeSpan.FromMilliseconds(100);
+    private static readonly TimeSpan OrderBookUpdateInterval = TimeSpan.FromMilliseconds(100);
     #endregion
 
     private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
@@ -42,24 +42,25 @@ internal static class Program
 
         // 1. create connections with exchange
         var credentials = new BinanceApiCredentials(apiKey, secret);
-        using IBinanceClient binanceRestClient = new BinanceClient(new BinanceClientOptions { ApiCredentials = credentials });
-        using IBinanceSocketClient binanceSocketClient = new BinanceSocketClient(new BinanceSocketClientOptions { ApiCredentials = credentials });
+        using IBinanceClient restClient = new BinanceClient(new BinanceClientOptions { ApiCredentials = credentials });
+        using IBinanceSocketClient webSocketClient = new BinanceSocketClient(new BinanceSocketClientOptions { ApiCredentials = credentials });
 
+        var ct = default(System.Threading.CancellationToken);
 
         // 2. test connection
         Logger.Info("Testing connection to Binance...");
         await AnsiConsole.Status()
             .StartAsync("Testing connection...", async ctx =>
             {
-                var pingResult = await binanceRestClient.SpotApi.ExchangeData.PingAsync();
+                var pingResult = await restClient.SpotApi.ExchangeData.PingAsync(ct);
                 AnsiConsole.MarkupLine($"Ping time: [yellow]{pingResult.Data} ms[/]");
                 Logger.Info($"Ping successful: {pingResult.Data} ms");
 
-                Task.Delay(1000).Wait();
+                Task.Delay(1000, ct).Wait();
             });
 
         // 3. get order book
-        var marketDepthManager = new MarketDepthManager(binanceRestClient, binanceSocketClient, Logger);
+        var marketDepthManager = new MarketDepthManager(restClient, webSocketClient, Logger);
         var marketDepth = new MarketDepth(Symbol);
 
 
@@ -113,8 +114,7 @@ internal static class Program
 
         // build order book
         Logger.Info($"Building order book for {Symbol}...");
-        await marketDepthManager.BuildAsync(marketDepth, OrderBookDepth, 
-            OrderBookUpdateLimit.HasValue ? (int)OrderBookUpdateLimit.Value.TotalMilliseconds : 1000);
+        await marketDepthManager.BuildAsync(marketDepth, OrderBookUpdateInterval, OrderBookDepth, ct);
         Logger.Info("Order book ready and streaming updates...");
 
 

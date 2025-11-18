@@ -138,11 +138,11 @@ public class MarketMakerBot : BaseMarketBot<NaiveMarketMakerStrategy>
 
 
         var marketDepthManager = new MarketDepthManager(_binanceRestClient, _webSocketClient, Logger);
-
+        var uppdateInterval = TimeSpan.FromMilliseconds(1000);
         // stream order book updates
-        marketDepthManager.StreamUpdates(_marketDepth, TimeSpan.FromMilliseconds(1000));
+        marketDepthManager.StreamUpdates(_marketDepth, uppdateInterval);
         // build order book
-        await marketDepthManager.BuildAsync(_marketDepth, 100);
+        await marketDepthManager.BuildAsync(_marketDepth, orderBookDepth: 100, updateInterval: uppdateInterval);
     } 
 
 
