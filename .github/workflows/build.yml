@@ -37,6 +37,7 @@ jobs:
         cache: true
         cache-dependency-path: |
           src/**/*.csproj
+          tests/**/*.csproj
           src/**/global.json
           src/**/NuGet.Config
 
@@ -50,9 +51,9 @@ jobs:
       run: dotnet build --no-restore --configuration ${{ matrix.configuration }} --nologo
     
     - name: Test
-      run: dotnet test --no-build --configuration ${{ matrix.configuration }} --collect:"XPlat Code Coverage" --logger "trx;LogFileName=test_results.trx" || echo "No tests found"
+      run: dotnet test BinanceBot.sln --no-build --configuration ${{ matrix.configuration }} --collect:"XPlat Code Coverage" --logger "trx;LogFileName=test_results.trx"
 
-    - name: Upload test results (TRX)
+    - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
       with:
@@ -61,7 +62,7 @@ jobs:
           **/TestResults/**/*.trx
         if-no-files-found: warn
 
-    - name: Upload code coverage (Cobertura)
+    - name: Upload code coverage
       if: always()
       uses: actions/upload-artifact@v4
       with:
