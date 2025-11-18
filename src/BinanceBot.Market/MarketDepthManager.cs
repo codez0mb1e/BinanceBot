@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Binance.Net.Interfaces;
 using Binance.Net.Interfaces.Clients;
@@ -31,6 +32,8 @@ public class MarketDepthManager
     private readonly Queue<IBinanceEventOrderBook> _eventBuffer = new();
     private long _localOrderBookUpdateId = 0;
     private bool _isSnapshotLoaded = false;
+
+    private readonly TimeSpan _defaultUpdateInterval = TimeSpan.FromMilliseconds(100);
     
     private UpdateSubscription _subscription;
 
@@ -38,15 +41,15 @@ public class MarketDepthManager
     /// <summary>
     /// Create instance of <see cref="MarketDepthManager"/>
     /// </summary>
-    /// <param name="binanceRestClient">Binance REST client</param>
+    /// <param name="restClient">Binance REST client</param>
     /// <param name="webSocketClient">Binance WebSocket client</param>
     /// <param name="logger">Logger instance</param>
-    /// <exception cref="ArgumentNullException"><paramref name="binanceRestClient"/> cannot be <see langword="null"/></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="restClient"/> cannot be <see langword="null"/></exception>
     /// <exception cref="ArgumentNullException"><paramref name="webSocketClient"/> cannot be <see langword="null"/></exception>
     /// <exception cref="ArgumentNullException"><paramref name="logger"/> cannot be <see langword="null"/></exception>
-    public MarketDepthManager(IBinanceClient binanceRestClient, IBinanceSocketClient webSocketClient, Logger logger)
+    public MarketDepthManager(IBinanceClient restClient, IBinanceSocketClient webSocketClient, Logger logger)
     {
-        _restClient = binanceRestClient ?? throw new ArgumentNullException(nameof(binanceRestClient));
+        _restClient = restClient ?? throw new ArgumentNullException(nameof(restClient));
         _webSocketClient = webSocketClient ?? throw new ArgumentNullException(nameof(webSocketClient));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -56,20 +59,32 @@ public class MarketDepthManager
     /// Build <see cref="MarketDepth"/> following Binance official guidelines
     /// </summary>
     /// <param name="marketDepth">Market depth</param>
-    /// <param name="limit">Limit of returned orders count</param>
-    /// <param name="updateLimit">Update speed limit (100ms, 1000ms)</param>
-    public async Task BuildAsync(MarketDepth marketDepth, short limit = 10, int updateLimit = 1000)
+    /// <param name="orderBookDepth">Limit of returned orders count (default 10)</param>
+    /// <param name="updateInterval">Update speed limit (100ms, 1000ms)</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <exception cref="ArgumentNullException"><paramref name="marketDepth"/> cannot be <see langword="null"/></exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="updateInterval"/> must be greater than zero</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="orderBookDepth"/> must be greater than zero</exception>
+    /// <exception cref="OperationCanceledException">The operation was canceled.</exception>
+    /// <exception cref="InvalidOperationException">Failed to subscribe to order book updates or get order book snapshot</exception>
+    public async Task BuildAsync(MarketDepth marketDepth, TimeSpan? updateInterval = default, short orderBookDepth = 10, CancellationToken ct = default)
     {
         if (marketDepth == null)
             throw new ArgumentNullException(nameof(marketDepth));
-        if (limit <= 0)
-            throw new ArgumentOutOfRangeException(nameof(limit));
+        if (updateInterval.HasValue && updateInterval <= TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(updateInterval));
+        if (orderBookDepth <= 0)
+            throw new ArgumentOutOfRangeException(nameof(orderBookDepth));
 
         // Step 1: Open WebSocket stream and start buffering
-        _logger.Debug($"Step 1: Opening WebSocket stream for {marketDepth.Symbol}");
+        _logger.Debug($"1: Opening WebSocket stream for {marketDepth.Symbol}");
+
+        var updateIntervalMs = updateInterval.HasValue ? (int)updateInterval.Value.TotalMilliseconds : (int)_defaultUpdateInterval.TotalMilliseconds;
         var subscriptionResult = await _webSocketClient.SpotStreams.SubscribeToOrderBookUpdatesAsync(
-            marketDepth.Symbol, updateLimit,
-            data => OnDepthUpdate(marketDepth, data)).ConfigureAwait(false);
+            marketDepth.Symbol, updateIntervalMs,
+            data => OnDepthUpdate(marketDepth, data),
+            ct)
+            .ConfigureAwait(false);
         
         if (!subscriptionResult.Success || subscriptionResult.Data == null)
             throw new InvalidOperationException($"Failed to subscribe to order book updates: {subscriptionResult.Error?.Message}");
@@ -77,12 +92,12 @@ public class MarketDepthManager
         _subscription = subscriptionResult.Data;
 
         // Step 2: Wait a bit to buffer some events
-        _logger.Debug($"Step 2: Buffering events for 200ms");
-        await Task.Delay(200).ConfigureAwait(false);
+        _logger.Debug($"2: Buffering events for {updateIntervalMs * 2}ms");
+        await Task.Delay(updateIntervalMs * 2, ct).ConfigureAwait(false);
 
-        _logger.Debug($"Step 3: Getting order book snapshot for {marketDepth.Symbol}");
+        _logger.Debug($"3: Getting order book snapshot for {marketDepth.Symbol}");
         // Step 3: Get depth snapshot
-        WebCallResult<BinanceOrderBook> response = await _restClient.SpotApi.ExchangeData.GetOrderBookAsync(marketDepth.Symbol, limit);
+        WebCallResult<BinanceOrderBook> response = await _restClient.SpotApi.ExchangeData.GetOrderBookAsync(marketDepth.Symbol, orderBookDepth, ct).ConfigureAwait(false);
         if (!response.Success || response.Data == null)
             throw new InvalidOperationException($"Failed to get order book snapshot: {response.Error?.Message}");
 
@@ -100,14 +115,14 @@ public class MarketDepthManager
 
         if (firstEvent != null)
         {
-            _logger.Debug($"Step 4: Validating snapshot. FirstEvent.U={firstEvent.FirstUpdateId}, Snapshot.LastUpdateId={snapshot.LastUpdateId}");
+            _logger.Debug($"4: Validating snapshot. FirstEvent.U={firstEvent.FirstUpdateId}, Snapshot.LastUpdateId={snapshot.LastUpdateId}");
         }
 
         while (firstEvent != null && snapshot.LastUpdateId < firstEvent.FirstUpdateId)
         {
             _logger.Warn($"Snapshot too old: LastUpdateId={snapshot.LastUpdateId} < FirstEvent.U={firstEvent.FirstUpdateId}. Retrying...");
             // Snapshot is too old, need to get a new one
-            response = await _restClient.SpotApi.ExchangeData.GetOrderBookAsync(marketDepth.Symbol, limit);
+            response = await _restClient.SpotApi.ExchangeData.GetOrderBookAsync(marketDepth.Symbol, orderBookDepth, ct).ConfigureAwait(false);
             if (!response.Success || response.Data == null)
                 throw new InvalidOperationException($"Failed to get order book snapshot: {response.Error?.Message}");
             snapshot = response.Data;
@@ -131,10 +146,10 @@ public class MarketDepthManager
                 _eventBuffer.Dequeue();
                 discardedCount++;
             }
-            _logger.Debug($"Step 5: Discarded {discardedCount} outdated events (u <= {snapshot.LastUpdateId})");
+            _logger.Debug($"5: Discarded {discardedCount} outdated events (u <= {snapshot.LastUpdateId})");
 
             // Step 6: Set local order book to snapshot
-            _logger.Debug($"Step 6: Applying snapshot with {snapshot.Asks.Count()} asks and {snapshot.Bids.Count()} bids");
+            _logger.Debug($"6: Applying snapshot with {snapshot.Asks.Count()} asks and {snapshot.Bids.Count()} bids");
             marketDepth.UpdateDepth(snapshot.Asks, snapshot.Bids, snapshot.LastUpdateId);
             _localOrderBookUpdateId = snapshot.LastUpdateId;
             _isSnapshotLoaded = true;
@@ -151,7 +166,7 @@ public class MarketDepthManager
                 }
                 _eventBuffer.Dequeue();
             }
-            _logger.Debug($"Step 7: Applied {appliedCount} buffered events");
+            _logger.Debug($"7: Applied {appliedCount} buffered events");
         }
     }
 
@@ -161,7 +176,7 @@ public class MarketDepthManager
     /// </summary>
     /// <param name="marketDepth">Market depth</param>
     /// <param name="updateInterval">Update interval (100ms or 1000ms)</param>
-    public void StreamUpdates(MarketDepth marketDepth, TimeSpan? updateInterval = default)
+    public void StreamUpdates(MarketDepth marketDepth, TimeSpan? updateInterval = default, CancellationToken ct = default)
     {
         if (marketDepth == null)
             throw new ArgumentNullException(nameof(marketDepth));
@@ -169,14 +184,16 @@ public class MarketDepthManager
         // Step 1 & 2: Open WebSocket and buffer events
         _subscription = _webSocketClient.SpotStreams.SubscribeToOrderBookUpdatesAsync(
             marketDepth.Symbol,
-            updateInterval.HasValue ? (int)updateInterval.Value.TotalMilliseconds : 1000,
-            data => OnDepthUpdate(marketDepth, data)).Result.Data;
+            updateInterval.HasValue ? (int)updateInterval.Value.TotalMilliseconds : (int)_defaultUpdateInterval.TotalMilliseconds,
+            data => OnDepthUpdate(marketDepth, data),
+            ct)
+            .Result.Data;
     }
 
     /// <summary>
     /// Stop streaming updates and unsubscribe
     /// </summary>
-    public async Task StopStreamingAsync()
+    public async Task StopStreamingAsync(CancellationToken ct = default)
     {
         if (_subscription != null)
         {
