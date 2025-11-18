@@ -137,7 +137,7 @@ public class MarketMakerBot : BaseMarketBot<NaiveMarketMakerStrategy>
         _marketDepth.MarketBestPairChanged += async (s, e) => await OnMarketBestPairChanged(s, e);
 
 
-        var marketDepthManager = new MarketDepthManager(_binanceRestClient, _webSocketClient);
+        var marketDepthManager = new MarketDepthManager(_binanceRestClient, _webSocketClient, Logger);
 
         // stream order book updates
         marketDepthManager.StreamUpdates(_marketDepth, TimeSpan.FromMilliseconds(1000));
