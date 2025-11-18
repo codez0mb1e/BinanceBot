@@ -21,9 +21,9 @@ namespace BinanceBot.MarketViewer.Console
     {
         #region Bot Settings
         // WARN: Set necessary token here
-        private const string Symbol = "ETHUSDT";
+        private const string Symbol = "BNBUSDT";
         private const int OrderBookDepth = 10;
-        private static readonly TimeSpan? OrderBookUpdateLimit = TimeSpan.FromMilliseconds(1000);
+        private static readonly TimeSpan? OrderBookUpdateLimit = TimeSpan.FromMilliseconds(100);
         #endregion
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
@@ -33,6 +33,8 @@ namespace BinanceBot.MarketViewer.Console
         {
             // Load .env file first
             DotEnv.Load();
+
+            Logger.Debug($"Symbol: {Symbol}, OrderBookDepth: {OrderBookDepth}");
 
             // WARN: Set your credentials in .env file
             var apiKey = Environment.GetEnvironmentVariable("BINANCE_API_KEY") ?? throw new InvalidOperationException("BINANCE_API_KEY environment variable is not set");
@@ -45,11 +47,13 @@ namespace BinanceBot.MarketViewer.Console
 
 
             // 2. test connection
+            Logger.Info("Testing connection to Binance...");
             await AnsiConsole.Status()
                 .StartAsync("Testing connection...", async ctx =>
                 {
                     var pingResult = await binanceRestClient.SpotApi.ExchangeData.PingAsync();
                     AnsiConsole.MarkupLine($"Ping time: [yellow]{pingResult.Data} ms[/]");
+                    Logger.Info($"Ping successful: {pingResult.Data} ms");
 
                     Task.Delay(1000).Wait();
                 });
@@ -108,13 +112,17 @@ namespace BinanceBot.MarketViewer.Console
 
 
             // build order book
+            Logger.Info($"Building order book for {Symbol}...");
             await marketDepthManager.BuildAsync(marketDepth, OrderBookDepth);
             // stream order book updates
+            Logger.Info("Streaming order book updates...");
             marketDepthManager.StreamUpdates(marketDepth, OrderBookUpdateLimit);
 
 
             WriteLine("Press Enter to exit...");
             ReadLine();
+            
+            Logger.Info("Order book viewer stopped");
         }
     }
 }
