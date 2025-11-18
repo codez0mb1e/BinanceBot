@@ -19,8 +19,8 @@ internal static class Program
 {
     #region Bot Settings
     // WARN: set necessary token here
-    private const string Symbol = "SOLUSDT";
-    private static readonly TimeSpan ReceiveWindow = TimeSpan.FromMilliseconds(1000);
+    private const string Symbol = "BNBUSDT";
+    private static readonly TimeSpan ReceiveWindow = TimeSpan.FromMilliseconds(100);
     #endregion
 
     private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
@@ -54,7 +54,8 @@ internal static class Program
             Logger.Error($"{permissionsResponse.Error?.Message}");
             ReadLine();
         }
-        else if (permissionsResponse.Data.IpRestrict | !permissionsResponse.Data.EnableSpotAndMarginTrading)
+        
+        if (!(permissionsResponse.Data.IpRestrict && permissionsResponse.Data.EnableSpotAndMarginTrading))
         {
             Logger.Error("Insufficient API permissions");
             ReadLine();
