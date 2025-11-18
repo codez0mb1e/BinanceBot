@@ -59,7 +59,7 @@ internal static class Program
             });
 
         // 3. get order book
-        var marketDepthManager = new MarketDepthManager(binanceRestClient, binanceSocketClient);
+        var marketDepthManager = new MarketDepthManager(binanceRestClient, binanceSocketClient, Logger);
         var marketDepth = new MarketDepth(Symbol);
 
 
@@ -113,10 +113,9 @@ internal static class Program
 
         // build order book
         Logger.Info($"Building order book for {Symbol}...");
-        await marketDepthManager.BuildAsync(marketDepth, OrderBookDepth);
-        // stream order book updates
-        Logger.Info("Streaming order book updates...");
-        marketDepthManager.StreamUpdates(marketDepth, OrderBookUpdateLimit);
+        await marketDepthManager.BuildAsync(marketDepth, OrderBookDepth, 
+            OrderBookUpdateLimit.HasValue ? (int)OrderBookUpdateLimit.Value.TotalMilliseconds : 1000);
+        Logger.Info("Order book ready and streaming updates...");
 
 
         WriteLine("Press Enter to exit...");
