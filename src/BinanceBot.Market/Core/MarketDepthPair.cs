@@ -13,6 +13,8 @@ public record MarketDepthPair
             throw new ArgumentNullException(nameof(ask));
         if (bid == null) 
             throw new ArgumentNullException(nameof(bid));
+        if (ask.Price < bid.Price)  
+            throw new ArgumentException("Ask price must be greater than or equal to bid price.");
         if (updateTime <= 0)
             throw new ArgumentOutOfRangeException(nameof(updateTime));
         
