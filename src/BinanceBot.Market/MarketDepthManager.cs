@@ -130,10 +130,7 @@ public class MarketDepthManager
             
             lock (_eventBuffer)
             {
-                if (_eventBuffer.Count > 0)
-                    firstEvent = _eventBuffer.Peek() as BinanceEventOrderBook;
-                else
-                    firstEvent = null;
+                firstEvent = _eventBuffer.Any() ? _eventBuffer.Peek() as BinanceEventOrderBook : null;
             }
         }
 
@@ -141,7 +138,7 @@ public class MarketDepthManager
         {
             // Step 5: Discard buffered events where u <= lastUpdateId
             int discardedCount = 0;
-            while (_eventBuffer.Count > 0 && _eventBuffer.Peek().LastUpdateId <= snapshot.LastUpdateId)
+            while (_eventBuffer.Any() && _eventBuffer.Peek().LastUpdateId <= snapshot.LastUpdateId)
             {
                 _eventBuffer.Dequeue();
                 discardedCount++;
@@ -156,7 +153,7 @@ public class MarketDepthManager
 
             // Step 7: Apply buffered updates
             int appliedCount = 0;
-            while (_eventBuffer.Count > 0)
+            while (_eventBuffer.Any())
             {
                 var bufferedEvent = _eventBuffer.Peek() as BinanceEventOrderBook;
                 if (bufferedEvent != null)
