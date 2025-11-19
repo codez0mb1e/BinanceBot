@@ -7,6 +7,7 @@ using Binance.Net.Interfaces.Clients;
 using Binance.Net.Objects;
 using BinanceBot.Market;
 using BinanceBot.Market.Configurations;
+using BinanceBot.Market.Domain;
 using BinanceBot.Market.Strategies;
 using dotenv.net;
 
@@ -19,7 +20,7 @@ internal static class Program
 {
     #region Bot Settings
     // WARN: set necessary token here
-    private const string Symbol = "BNBUSDT";
+     private static readonly MarketSymbol Symbol = new MarketSymbol("BNB", "USDT", BinanceBot.Market.Domain.ContractType.Spot);
     private static readonly TimeSpan ReceiveWindow = TimeSpan.FromMilliseconds(100);
     #endregion
 
@@ -63,10 +64,10 @@ internal static class Program
 
 
         // 3. set bot strategy config
-        var exchangeInfoResult = binanceRestClient.SpotApi.ExchangeData.GetExchangeInfoAsync(Symbol);
+        var exchangeInfoResult = binanceRestClient.SpotApi.ExchangeData.GetExchangeInfoAsync(Symbol.FullName);
 
         var symbolInfo = exchangeInfoResult.Result.Data.Symbols
-            .Single(s => s.Name.Equals(Symbol, StringComparison.InvariantCultureIgnoreCase));
+            .Single(s => s.Name.Equals(Symbol.FullName, StringComparison.InvariantCultureIgnoreCase));
 
         if (!(symbolInfo.Status == SymbolStatus.Trading && symbolInfo.OrderTypes.Contains(SpotOrderType.Market)))
         {
