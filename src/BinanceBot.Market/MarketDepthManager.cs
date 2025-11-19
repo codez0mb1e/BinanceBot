@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Binance.Net.Interfaces;
 using Binance.Net.Interfaces.Clients;
 using Binance.Net.Objects.Models.Spot;
+using Binance.Net.Objects.Models.Futures;
 using BinanceBot.Market.Domain;
 using CryptoExchange.Net.Objects;
 using CryptoExchange.Net.Sockets;
@@ -80,11 +81,28 @@ public class MarketDepthManager
         _logger.Debug($"1: Opening WebSocket stream for {marketDepth.Symbol}");
 
         var updateIntervalMs = updateInterval.HasValue ? (int)updateInterval.Value.TotalMilliseconds : (int)_defaultUpdateInterval.TotalMilliseconds;
-        var subscriptionResult = await _webSocketClient.SpotStreams.SubscribeToOrderBookUpdatesAsync(
-            marketDepth.Symbol, updateIntervalMs,
-            data => OnDepthUpdate(marketDepth, data),
-            ct)
-            .ConfigureAwait(false);
+
+        CallResult<UpdateSubscription> subscriptionResult;
+        
+        switch (marketDepth.Symbol.ContractType)
+        {
+            case ContractType.Spot:
+                subscriptionResult = await _webSocketClient.SpotStreams.SubscribeToOrderBookUpdatesAsync(
+                    marketDepth.Symbol.FullName, updateIntervalMs,
+                    data => OnDepthUpdateSpot(marketDepth, data),
+                    ct)
+                .ConfigureAwait(false);
+                break;
+            case ContractType.Perpetual:
+                subscriptionResult = await _webSocketClient.UsdFuturesStreams.SubscribeToOrderBookUpdatesAsync(
+                    marketDepth.Symbol.FullName, updateIntervalMs,
+                    data => OnDepthUpdatePerp(marketDepth, data),
+                    ct)
+                .ConfigureAwait(false);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(marketDepth.Symbol.ContractType), "Unknown contract type.");
+        }
         
         if (!subscriptionResult.Success || subscriptionResult.Data == null)
             throw new InvalidOperationException($"Failed to subscribe to order book updates: {subscriptionResult.Error?.Message}");
@@ -92,25 +110,49 @@ public class MarketDepthManager
         _subscription = subscriptionResult.Data;
 
         // Step 2: Wait a bit to buffer some events
-        _logger.Debug($"2: Buffering events for {updateIntervalMs * 2}ms");
-        await Task.Delay(updateIntervalMs * 2, ct).ConfigureAwait(false);
+        // Use longer buffer time to ensure we have enough events before snapshot
+        var bufferTimeMs = Math.Max(updateIntervalMs * 5, 500);
+        _logger.Debug($"2: Buffering events for {bufferTimeMs}ms");
+        await Task.Delay(bufferTimeMs, ct).ConfigureAwait(false);
 
-        _logger.Debug($"3: Getting order book snapshot for {marketDepth.Symbol}");
         // Step 3: Get depth snapshot
-        WebCallResult<BinanceOrderBook> response = await _restClient.SpotApi.ExchangeData.GetOrderBookAsync(marketDepth.Symbol, orderBookDepth, ct).ConfigureAwait(false);
+        _logger.Debug($"3: Getting order book snapshot for {marketDepth.Symbol}");
+        
+        (bool Success, IBinanceOrderBook Data, Error Error) response;
+
+        switch (marketDepth.Symbol.ContractType)
+        {
+            case ContractType.Spot:
+                WebCallResult<BinanceOrderBook> spotResponse = await _restClient.SpotApi.ExchangeData.GetOrderBookAsync(
+                    marketDepth.Symbol.FullName, orderBookDepth, ct)
+                .ConfigureAwait(false);
+
+                response = (spotResponse.Success, spotResponse.Data, spotResponse.Error);
+                break;
+            case ContractType.Perpetual:
+                WebCallResult<BinanceFuturesOrderBook> perpResponse = await _restClient.UsdFuturesApi.ExchangeData.GetOrderBookAsync(
+                    marketDepth.Symbol.FullName, orderBookDepth, ct)
+                .ConfigureAwait(false);
+
+                response = (perpResponse.Success, perpResponse.Data, perpResponse.Error);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(marketDepth.Symbol.ContractType), "Unknown contract type.");
+        }
+
         if (!response.Success || response.Data == null)
             throw new InvalidOperationException($"Failed to get order book snapshot: {response.Error?.Message}");
 
-        BinanceOrderBook snapshot = response.Data;
+        IBinanceOrderBook snapshot = response.Data;
         _logger.Debug($"Snapshot received: LastUpdateId={snapshot.LastUpdateId}");
         
         // Step 4: Check if snapshot is valid
         // If buffered events exist and snapshot's lastUpdateId is strictly less than first event's U, retry
-        BinanceEventOrderBook firstEvent = null;
+        IBinanceEventOrderBook firstEvent = null;
         lock (_eventBuffer)
         {
             if (_eventBuffer.Count > 0)
-                firstEvent = _eventBuffer.Peek() as BinanceEventOrderBook;
+                firstEvent = _eventBuffer.Peek();
         }
 
         if (firstEvent != null)
@@ -122,7 +164,26 @@ public class MarketDepthManager
         {
             _logger.Warn($"Snapshot too old: LastUpdateId={snapshot.LastUpdateId} < FirstEvent.U={firstEvent.FirstUpdateId}. Retrying...");
             // Snapshot is too old, need to get a new one
-            response = await _restClient.SpotApi.ExchangeData.GetOrderBookAsync(marketDepth.Symbol, orderBookDepth, ct).ConfigureAwait(false);
+            switch (marketDepth.Symbol.ContractType)
+            {
+                case ContractType.Spot:
+                    WebCallResult<BinanceOrderBook> spotResponse = await _restClient.SpotApi.ExchangeData.GetOrderBookAsync(
+                        marketDepth.Symbol.FullName, orderBookDepth, ct)
+                    .ConfigureAwait(false);
+    
+                    response = (spotResponse.Success, spotResponse.Data, spotResponse.Error);
+                    break;
+                case ContractType.Perpetual:
+                    WebCallResult<BinanceFuturesOrderBook> perpResponse = await _restClient.UsdFuturesApi.ExchangeData.GetOrderBookAsync(
+                        marketDepth.Symbol.FullName, orderBookDepth, ct)
+                    .ConfigureAwait(false);
+    
+                    response = (perpResponse.Success, perpResponse.Data, perpResponse.Error);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(marketDepth.Symbol.ContractType), "Unknown contract type.");
+            }
+
             if (!response.Success || response.Data == null)
                 throw new InvalidOperationException($"Failed to get order book snapshot: {response.Error?.Message}");
             snapshot = response.Data;
@@ -130,7 +191,7 @@ public class MarketDepthManager
             
             lock (_eventBuffer)
             {
-                firstEvent = _eventBuffer.Any() ? _eventBuffer.Peek() as BinanceEventOrderBook : null;
+                firstEvent = _eventBuffer.Any() ? _eventBuffer.Peek() : null;
             }
         }
 
@@ -155,13 +216,12 @@ public class MarketDepthManager
             int appliedCount = 0;
             while (_eventBuffer.Any())
             {
-                var bufferedEvent = _eventBuffer.Peek() as BinanceEventOrderBook;
+                var bufferedEvent = _eventBuffer.Dequeue();
                 if (bufferedEvent != null)
                 {
                     ApplyDepthUpdate(marketDepth, bufferedEvent);
                     appliedCount++;
                 }
-                _eventBuffer.Dequeue();
             }
             _logger.Debug($"7: Applied {appliedCount} buffered events");
         }
@@ -182,11 +242,30 @@ public class MarketDepthManager
             throw new ArgumentNullException(nameof(marketDepth));
 
         // Step 1 & 2: Open WebSocket and buffer events
-        var subscriptionResult = await _webSocketClient.SpotStreams.SubscribeToOrderBookUpdatesAsync(
-            marketDepth.Symbol,
-            updateInterval.HasValue ? (int)updateInterval.Value.TotalMilliseconds : (int)_defaultUpdateInterval.TotalMilliseconds,
-            data => OnDepthUpdate(marketDepth, data),
-            ct);
+        _logger.Debug($"1 & 2: Streaming updates: Opening WebSocket stream for {marketDepth.Symbol}");
+        CallResult<UpdateSubscription> subscriptionResult;
+
+        switch (marketDepth.Symbol.ContractType)
+        {
+            case ContractType.Spot:
+                subscriptionResult = await _webSocketClient.SpotStreams.SubscribeToOrderBookUpdatesAsync(
+                marketDepth.Symbol.FullName,
+                updateInterval.HasValue ? (int)updateInterval.Value.TotalMilliseconds : (int)_defaultUpdateInterval.TotalMilliseconds,
+                data => OnDepthUpdateSpot(marketDepth, data),
+                ct)
+                .ConfigureAwait(false);
+                break;
+            case ContractType.Perpetual:
+                subscriptionResult = await _webSocketClient.UsdFuturesStreams.SubscribeToOrderBookUpdatesAsync(
+                marketDepth.Symbol.FullName,
+                updateInterval.HasValue ? (int)updateInterval.Value.TotalMilliseconds : (int)_defaultUpdateInterval.TotalMilliseconds,
+                data => OnDepthUpdatePerp(marketDepth, data),
+                ct)
+                .ConfigureAwait(false);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(marketDepth.Symbol.ContractType), "Unknown contract type.");
+        }
 
         _subscription = subscriptionResult.Data;
     }
@@ -201,9 +280,14 @@ public class MarketDepthManager
         }
     }
 
-    private void OnDepthUpdate(MarketDepth marketDepth, DataEvent<IBinanceEventOrderBook> dataEvent)
+    private void OnDepthUpdateSpot(MarketDepth marketDepth, DataEvent<IBinanceEventOrderBook> dataEvent) => 
+        OnDepthUpdate(marketDepth, dataEvent.Data);
+
+    private void OnDepthUpdatePerp(MarketDepth marketDepth, DataEvent<IBinanceFuturesEventOrderBook> dataEvent) => 
+        OnDepthUpdate(marketDepth, dataEvent.Data);
+
+    private void OnDepthUpdate(MarketDepth marketDepth, IBinanceEventOrderBook data)
     {
-        var data = dataEvent.Data as BinanceEventOrderBook;
         if (data == null) return;
         
         lock (_eventBuffer)
@@ -211,7 +295,7 @@ public class MarketDepthManager
             if (!_isSnapshotLoaded)
             {
                 // Step 2: Buffer events before snapshot is loaded
-                _eventBuffer.Enqueue(dataEvent.Data);
+                _eventBuffer.Enqueue(data);
                 _logger.Debug($"Step 2: Buffered event U={data.FirstUpdateId}, u={data.LastUpdateId}. Buffer size: {_eventBuffer.Count}");
                 return;
             }
@@ -221,7 +305,7 @@ public class MarketDepthManager
         }
     }
 
-    private void ApplyDepthUpdate(MarketDepth marketDepth, BinanceEventOrderBook eventData)
+    private void ApplyDepthUpdate(MarketDepth marketDepth, IBinanceEventOrderBook eventData)
     {
         // Step 7: Apply update procedure
         
