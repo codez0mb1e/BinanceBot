@@ -114,14 +114,14 @@ public class MarketDepthManagerTests
     }
 
     [Fact]
-    public void StreamUpdates_WithNullMarketDepth_ThrowsArgumentNullException()
+    public async Task StreamUpdates_WithNullMarketDepth_ThrowsArgumentNullException()
     {
         // Arrange
         var manager = new MarketDepthManager(_mockRestClient.Object, _mockSocketClient.Object, _mockLogger.Object);
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => 
-            manager.StreamUpdates(null));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => 
+            manager.StreamUpdatesAsync(null));
     }
 
     [Fact]

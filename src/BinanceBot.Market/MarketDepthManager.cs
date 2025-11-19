@@ -172,22 +172,24 @@ public class MarketDepthManager
     /// Stream <see cref="MarketDepth"/> updates
     /// </summary>
     /// <param name="marketDepth">Market depth</param>
+    /// Stream <see cref="MarketDepth"/> updates asynchronously.
+    /// </summary>
+    /// <param name="marketDepth">Market depth</param>
     /// <param name="updateInterval">Update interval (100ms or 1000ms)</param>
-    public void StreamUpdates(MarketDepth marketDepth, TimeSpan? updateInterval = default, CancellationToken ct = default)
+    public async Task StreamUpdatesAsync(MarketDepth marketDepth, TimeSpan? updateInterval = default, CancellationToken ct = default)
     {
         if (marketDepth == null)
             throw new ArgumentNullException(nameof(marketDepth));
 
         // Step 1 & 2: Open WebSocket and buffer events
-        _subscription = _webSocketClient.SpotStreams.SubscribeToOrderBookUpdatesAsync(
+        var subscriptionResult = await _webSocketClient.SpotStreams.SubscribeToOrderBookUpdatesAsync(
             marketDepth.Symbol,
             updateInterval.HasValue ? (int)updateInterval.Value.TotalMilliseconds : (int)_defaultUpdateInterval.TotalMilliseconds,
             data => OnDepthUpdate(marketDepth, data),
-            ct)
-            .Result.Data;
-    }
+            ct);
 
-    /// <summary>
+        _subscription = subscriptionResult.Data;
+    }
     /// Stop streaming updates and unsubscribe
     /// </summary>
     public async Task StopStreamingAsync(CancellationToken ct = default)
