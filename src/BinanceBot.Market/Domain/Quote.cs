@@ -1,7 +1,7 @@
 ﻿using System;
 using Binance.Net.Enums;
 
-namespace BinanceBot.Market.Core;
+namespace BinanceBot.Market.Domain;
 
 /// <summary>
 /// <see cref="MarketDepth"/> quote representing bid or ask

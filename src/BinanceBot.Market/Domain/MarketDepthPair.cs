@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BinanceBot.Market.Core;
+namespace BinanceBot.Market.Domain;
 
 /// <summary>
 /// Order book's ask-bid pair

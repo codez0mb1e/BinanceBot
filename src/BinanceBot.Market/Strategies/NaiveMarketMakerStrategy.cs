@@ -1,7 +1,7 @@
 ﻿using System;
 using Binance.Net.Enums;
 using BinanceBot.Market.Configurations;
-using BinanceBot.Market.Core;
+using BinanceBot.Market.Domain;
 using NLog;
 
 namespace BinanceBot.Market.Strategies;

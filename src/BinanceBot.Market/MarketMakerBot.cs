@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Binance.Net.Enums;
 using Binance.Net.Interfaces.Clients;
 using Binance.Net.Objects.Models.Spot;
-using BinanceBot.Market.Core;
+using BinanceBot.Market.Domain;
 using BinanceBot.Market.Strategies;
 using CryptoExchange.Net.Objects;
 using NLog;

@@ -1,6 +1,7 @@
 using Binance.Net.Enums;
 using Binance.Net.Objects.Models;
 using BinanceBot.Market.Core;
+using BinanceBot.Market.Domain;
 
 namespace BinanceBot.Market.Tests.Core;
 
