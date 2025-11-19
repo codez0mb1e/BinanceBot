@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Binance.Net.Objects.Models.Spot;
+using BinanceBot.Market.Domain;
 using NLog;
 
 namespace BinanceBot.Market;
@@ -19,7 +20,7 @@ public abstract class BaseMarketBot<TStrategy> :
     protected readonly TStrategy MarketStrategy;
 
 
-    protected BaseMarketBot(string symbol, TStrategy marketStrategy, Logger logger)
+    protected BaseMarketBot(MarketSymbol symbol, TStrategy marketStrategy, Logger logger)
     {
         Symbol = symbol ?? throw new ArgumentNullException(nameof(symbol));
         MarketStrategy = marketStrategy ?? throw new ArgumentNullException(nameof(marketStrategy));
@@ -27,7 +28,7 @@ public abstract class BaseMarketBot<TStrategy> :
     }
 
 
-    public string Symbol { get; }
+    public MarketSymbol Symbol { get; }
 
 
     public abstract Task RunAsync();

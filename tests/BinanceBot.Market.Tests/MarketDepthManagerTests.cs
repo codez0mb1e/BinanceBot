@@ -21,6 +21,9 @@ public class MarketDepthManagerTests
         _mockLogger = new Mock<Logger>();
     }
 
+    private static MarketDepth CreateTestMarketDepth() => 
+        new MarketDepth(new MarketSymbol("BTC", "USDT", ContractType.Spot));
+
     [Fact]
     public void Constructor_WithNullRestClient_ThrowsArgumentNullException()
     {
@@ -71,7 +74,7 @@ public class MarketDepthManagerTests
     {
         // Arrange
         var manager = new MarketDepthManager(_mockRestClient.Object, _mockSocketClient.Object, _mockLogger.Object);
-        var marketDepth = new MarketDepth("BTCUSDT");
+        var marketDepth = CreateTestMarketDepth();
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => 
@@ -83,7 +86,7 @@ public class MarketDepthManagerTests
     {
         // Arrange
         var manager = new MarketDepthManager(_mockRestClient.Object, _mockSocketClient.Object, _mockLogger.Object);
-        var marketDepth = new MarketDepth("BTCUSDT");
+        var marketDepth = CreateTestMarketDepth();
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => 
@@ -95,7 +98,7 @@ public class MarketDepthManagerTests
     {
         // Arrange
         var manager = new MarketDepthManager(_mockRestClient.Object, _mockSocketClient.Object, _mockLogger.Object);
-        var marketDepth = new MarketDepth("BTCUSDT");
+        var marketDepth = CreateTestMarketDepth();
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => 
@@ -107,7 +110,7 @@ public class MarketDepthManagerTests
     {
         // Arrange
         var manager = new MarketDepthManager(_mockRestClient.Object, _mockSocketClient.Object, _mockLogger.Object);
-        var marketDepth = new MarketDepth("BTCUSDT");
+        var marketDepth = CreateTestMarketDepth();
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => 
