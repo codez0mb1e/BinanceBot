@@ -114,7 +114,7 @@ internal static class Program
 
         // build order book
         Logger.Info($"Building order book for {Symbol}...");
-        await marketDepthManager.BuildAsync(marketDepth, OrderBookUpdateInterval, OrderBookDepth, ct);
+        await marketDepthManager.BuildAsync(marketDepth, OrderBookDepth, OrderBookUpdateInterval, ct);
         Logger.Info("Order book ready and streaming updates...");
 
 

@@ -74,7 +74,7 @@ public class MarketDepthManagerTests
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => 
-            manager.BuildAsync(marketDepth, null, 0));
+            manager.BuildAsync(marketDepth, updateInterval: null, orderBookDepth: 0));
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class MarketDepthManagerTests
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => 
-            manager.BuildAsync(marketDepth, null, -5));
+            manager.BuildAsync(marketDepth, updateInterval: null, orderBookDepth: -5));
     }
 
     [Fact]
@@ -98,7 +98,7 @@ public class MarketDepthManagerTests
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => 
-            manager.BuildAsync(marketDepth, TimeSpan.FromMilliseconds(-100)));
+            manager.BuildAsync(marketDepth, updateInterval: TimeSpan.FromMilliseconds(-100)));
     }
 
     [Fact]
@@ -110,7 +110,7 @@ public class MarketDepthManagerTests
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => 
-            manager.BuildAsync(marketDepth, TimeSpan.Zero));
+            manager.BuildAsync(marketDepth, updateInterval: TimeSpan.Zero));
     }
 
     [Fact]

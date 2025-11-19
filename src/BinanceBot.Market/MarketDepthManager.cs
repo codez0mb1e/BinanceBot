@@ -67,7 +67,7 @@ public class MarketDepthManager
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="orderBookDepth"/> must be greater than zero</exception>
     /// <exception cref="OperationCanceledException">The operation was canceled.</exception>
     /// <exception cref="InvalidOperationException">Failed to subscribe to order book updates or get order book snapshot</exception>
-    public async Task BuildAsync(MarketDepth marketDepth, TimeSpan? updateInterval = default, short orderBookDepth = 10, CancellationToken ct = default)
+    public async Task BuildAsync(MarketDepth marketDepth, short orderBookDepth = 10, TimeSpan? updateInterval = default, CancellationToken ct = default)
     {
         if (marketDepth == null)
             throw new ArgumentNullException(nameof(marketDepth));
