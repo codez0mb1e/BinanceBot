@@ -8,17 +8,24 @@ public class MarketDepthTests
 {
     private static MarketDepth CreateTestMarketDepth() => 
         new MarketDepth(new MarketSymbol("BTC", "USDT", ContractType.Spot));
-    [Fact]
-    public void Constructor_WithValidSymbol_CreatesInstance()
+    
+    private static MarketDepth CreateTestMarketDepthPerpetual() => 
+        new MarketDepth(new MarketSymbol("BTC", "USDT", ContractType.Perpetual));
+   
+    [Theory]
+    [InlineData(ContractType.Spot)]
+    [InlineData(ContractType.Perpetual)]
+    public void Constructor_WithValidSymbol_CreatesInstance(ContractType contractType)
     {
         // Arrange
-        var symbol = new MarketSymbol("BTC", "USDT", ContractType.Spot);
+        var symbol = new MarketSymbol("BTC", "USDT", contractType);
         
         // Act
         var marketDepth = new MarketDepth(symbol);
 
         // Assert
         Assert.Equal(symbol, marketDepth.Symbol);
+        Assert.Equal(contractType, marketDepth.Symbol.ContractType);
         Assert.Null(marketDepth.LastUpdateTime);
         Assert.Empty(marketDepth.Asks);
         Assert.Empty(marketDepth.Bids);
@@ -51,6 +58,34 @@ public class MarketDepthTests
         marketDepth.UpdateDepth(asks, bids, 123456);
 
         // Assert
+        Assert.Equal(123456, marketDepth.LastUpdateTime);
+        Assert.Equal(2, marketDepth.Asks.Count());
+        Assert.Equal(2, marketDepth.Bids.Count());
+        Assert.Equal(50000m, marketDepth.BestAsk.Price);
+        Assert.Equal(49900m, marketDepth.BestBid.Price);
+    }
+
+    [Fact]
+    public void UpdateDepth_WithValidData_UpdatesOrderBook_Perpetual()
+    {
+        // Arrange
+        var marketDepth = CreateTestMarketDepthPerpetual();
+        var asks = new List<BinanceOrderBookEntry>
+        {
+            new() { Price = 50000m, Quantity = 1.5m },
+            new() { Price = 50100m, Quantity = 2.0m }
+        };
+        var bids = new List<BinanceOrderBookEntry>
+        {
+            new() { Price = 49900m, Quantity = 1.0m },
+            new() { Price = 49800m, Quantity = 0.5m }
+        };
+
+        // Act
+        marketDepth.UpdateDepth(asks, bids, 123456);
+
+        // Assert
+        Assert.Equal(ContractType.Perpetual, marketDepth.Symbol.ContractType);
         Assert.Equal(123456, marketDepth.LastUpdateTime);
         Assert.Equal(2, marketDepth.Asks.Count());
         Assert.Equal(2, marketDepth.Bids.Count());
@@ -146,6 +181,32 @@ public class MarketDepthTests
         Assert.Equal(50000m, bestPair.Ask.Price);
         Assert.Equal(49900m, bestPair.Bid.Price);
         Assert.Equal(100m, bestPair.PriceSpread);
+    }
+
+    [Fact]
+    public void BestPair_WhenOrderBookHasData_ReturnsPair_Perpetual()
+    {
+        // Arrange
+        var marketDepth = CreateTestMarketDepthPerpetual();
+        var asks = new List<BinanceOrderBookEntry>
+        {
+            new() { Price = 50000m, Quantity = 1.5m }
+        };
+        var bids = new List<BinanceOrderBookEntry>
+        {
+            new() { Price = 49900m, Quantity = 1.0m }
+        };
+        marketDepth.UpdateDepth(asks, bids, 123456);
+
+        // Act
+        var bestPair = marketDepth.BestPair;
+
+        // Assert
+        Assert.NotNull(bestPair);
+        Assert.Equal(50000m, bestPair.Ask.Price);
+        Assert.Equal(49900m, bestPair.Bid.Price);
+        Assert.Equal(100m, bestPair.PriceSpread);
+        Assert.Equal(ContractType.Perpetual, marketDepth.Symbol.ContractType);
     }
 
     [Fact]
