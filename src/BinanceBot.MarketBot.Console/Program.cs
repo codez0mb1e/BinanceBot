@@ -55,7 +55,7 @@ internal static class Program
             ReadLine();
         }
         
-        if (!(permissionsResponse.Data.IpRestrict && permissionsResponse.Data.EnableSpotAndMarginTrading))
+        if (!permissionsResponse.Data.EnableSpotAndMarginTrading)
         {
             Logger.Error("Insufficient API permissions");
             ReadLine();
