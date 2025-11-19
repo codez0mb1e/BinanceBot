@@ -8,7 +8,7 @@ using Binance.Net.Clients;
 using Binance.Net.Interfaces.Clients;
 using Binance.Net.Objects;
 using BinanceBot.Market;
-using BinanceBot.Market.Core;
+using BinanceBot.Market.Domain;
 using dotenv.net;
 using Spectre.Console;
 

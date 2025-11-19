@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Binance.Net.Enums;
 using Binance.Net.Objects.Models;
-using BinanceBot.Market.Utility;
+using BinanceBot.Market.Core;
+using BinanceBot.Market.Extensions;
 
-namespace BinanceBot.Market.Core;
+namespace BinanceBot.Market.Domain;
 
 /// <summary>
 /// Order book

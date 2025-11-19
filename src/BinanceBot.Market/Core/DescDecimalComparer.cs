@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace BinanceBot.Market.Utility;
+namespace BinanceBot.Market.Core;
 
 /// <summary>
 /// Descending decimal comparer

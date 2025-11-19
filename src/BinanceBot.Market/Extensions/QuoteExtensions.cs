@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Binance.Net.Enums;
-using BinanceBot.Market.Core;
+using BinanceBot.Market.Domain;
 
-namespace BinanceBot.Market.Utility;
+namespace BinanceBot.Market.Extensions;
 
 internal static class QuoteExtensions
 {
