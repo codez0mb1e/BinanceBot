@@ -13,17 +13,16 @@ namespace BinanceBot.Market.Domain;
 /// </summary>
 public class MarketDepth : IMarketDepthPublisher
 {
-    public MarketDepth(string symbol)
+    public MarketDepth(MarketSymbol symbol)
     {
-        if (string.IsNullOrEmpty(symbol))
+        if (symbol == null)
             throw new ArgumentException("Invalid symbol value", nameof(symbol));
 
         Symbol = symbol;
     }
 
 
-    public string Symbol { get; }
-
+    public MarketSymbol Symbol { get; }
 
     #region Ask section
     private readonly IDictionary<decimal, decimal> _asks = new SortedDictionary<decimal, decimal>();

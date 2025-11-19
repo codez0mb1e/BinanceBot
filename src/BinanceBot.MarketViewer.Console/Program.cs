@@ -21,7 +21,7 @@ internal static class Program
 {
     #region Bot Settings
     // WARN: Set necessary token here
-    private const string Symbol = "BNBUSDT";
+    private static readonly MarketSymbol Symbol = new MarketSymbol("BNB", "USDT", ContractType.Spot);
     private const int OrderBookDepth = 10;
     private static readonly TimeSpan OrderBookUpdateInterval = TimeSpan.FromMilliseconds(100);
     #endregion

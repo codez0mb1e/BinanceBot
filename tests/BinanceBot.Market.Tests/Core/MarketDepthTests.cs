@@ -1,38 +1,41 @@
-using Binance.Net.Enums;
 using Binance.Net.Objects.Models;
-using BinanceBot.Market.Core;
 using BinanceBot.Market.Domain;
+using ContractType = BinanceBot.Market.Domain.ContractType;
 
 namespace BinanceBot.Market.Tests.Core;
 
 public class MarketDepthTests
 {
+    private static MarketDepth CreateTestMarketDepth() => 
+        new MarketDepth(new MarketSymbol("BTC", "USDT", ContractType.Spot));
     [Fact]
     public void Constructor_WithValidSymbol_CreatesInstance()
     {
-        // Arrange & Act
-        var marketDepth = new MarketDepth("BTCUSDT");
+        // Arrange
+        var symbol = new MarketSymbol("BTC", "USDT", ContractType.Spot);
+        
+        // Act
+        var marketDepth = new MarketDepth(symbol);
 
         // Assert
-        Assert.Equal("BTCUSDT", marketDepth.Symbol);
+        Assert.Equal(symbol, marketDepth.Symbol);
         Assert.Null(marketDepth.LastUpdateTime);
         Assert.Empty(marketDepth.Asks);
         Assert.Empty(marketDepth.Bids);
     }
 
-    [Theory]
-    [InlineData("")]
-    public void Constructor_WithInvalidSymbol_ThrowsArgumentException(string symbol)
+    [Fact]
+    public void Constructor_WithNullSymbol_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => new MarketDepth(symbol));
+        Assert.Throws<ArgumentException>(() => new MarketDepth(null));
     }
 
     [Fact]
     public void UpdateDepth_WithValidData_UpdatesOrderBook()
     {
         // Arrange
-        var marketDepth = new MarketDepth("BTCUSDT");
+        var marketDepth = CreateTestMarketDepth();
         var asks = new List<BinanceOrderBookEntry>
         {
             new() { Price = 50000m, Quantity = 1.5m },
@@ -59,7 +62,7 @@ public class MarketDepthTests
     public void UpdateDepth_WithOldUpdateTime_IgnoresUpdate()
     {
         // Arrange
-        var marketDepth = new MarketDepth("BTCUSDT");
+        var marketDepth = CreateTestMarketDepth();
         var asks = new List<BinanceOrderBookEntry>
         {
             new() { Price = 50000m, Quantity = 1.5m }
@@ -86,7 +89,7 @@ public class MarketDepthTests
     public void UpdateDepth_RemovesPriceLevelWithZeroQuantity()
     {
         // Arrange
-        var marketDepth = new MarketDepth("BTCUSDT");
+        var marketDepth = CreateTestMarketDepth();
         var asks = new List<BinanceOrderBookEntry>
         {
             new() { Price = 50000m, Quantity = 1.5m },
@@ -114,7 +117,7 @@ public class MarketDepthTests
     public void BestPair_WhenOrderBookIsEmpty_ReturnsNull()
     {
         // Arrange
-        var marketDepth = new MarketDepth("BTCUSDT");
+        var marketDepth = CreateTestMarketDepth();
 
         // Act & Assert
         Assert.Null(marketDepth.BestPair);
@@ -124,7 +127,7 @@ public class MarketDepthTests
     public void BestPair_WhenOrderBookHasData_ReturnsPair()
     {
         // Arrange
-        var marketDepth = new MarketDepth("BTCUSDT");
+        var marketDepth = CreateTestMarketDepth();
         var asks = new List<BinanceOrderBookEntry>
         {
             new() { Price = 50000m, Quantity = 1.5m }
@@ -149,7 +152,7 @@ public class MarketDepthTests
     public void MarketDepthChanged_RaisesEvent_WhenDepthUpdated()
     {
         // Arrange
-        var marketDepth = new MarketDepth("BTCUSDT");
+        var marketDepth = CreateTestMarketDepth();
         MarketDepthChangedEventArgs? eventArgs = null;
         marketDepth.MarketDepthChanged += (sender, e) => eventArgs = e;
 
@@ -175,7 +178,7 @@ public class MarketDepthTests
     public void MarketBestPairChanged_RaisesEvent_WhenBestPairChanges()
     {
         // Arrange
-        var marketDepth = new MarketDepth("BTCUSDT");
+        var marketDepth = CreateTestMarketDepth();
         var eventRaised = false;
         marketDepth.MarketBestPairChanged += (sender, e) => eventRaised = true;
 
@@ -199,7 +202,7 @@ public class MarketDepthTests
     public void Asks_AreSortedAscending()
     {
         // Arrange
-        var marketDepth = new MarketDepth("BTCUSDT");
+        var marketDepth = CreateTestMarketDepth();
         var asks = new List<BinanceOrderBookEntry>
         {
             new() { Price = 50100m, Quantity = 2.0m },
@@ -223,7 +226,7 @@ public class MarketDepthTests
     public void Bids_AreSortedDescending()
     {
         // Arrange
-        var marketDepth = new MarketDepth("BTCUSDT");
+        var marketDepth = CreateTestMarketDepth();
         var asks = new List<BinanceOrderBookEntry>
         {
             new() { Price = 50000m, Quantity = 1.0m }
@@ -247,7 +250,7 @@ public class MarketDepthTests
     public void UpdateDepth_WithZeroOrNegativeUpdateTime_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
-        var marketDepth = new MarketDepth("BTCUSDT");
+        var marketDepth = CreateTestMarketDepth();
         var asks = new List<BinanceOrderBookEntry>
         {
             new() { Price = 50000m, Quantity = 1.5m }

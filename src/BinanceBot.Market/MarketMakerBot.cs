@@ -34,7 +34,7 @@ public class MarketMakerBot : BaseMarketBot<NaiveMarketMakerStrategy>
     /// <exception cref="ArgumentNullException"><paramref name="webSocketClient"/> cannot be <see langword="null"/></exception>
     /// <exception cref="ArgumentNullException"><paramref name="binanceRestClient"/> cannot be <see langword="null"/></exception>
     public MarketMakerBot(
-        string symbol,
+        MarketSymbol symbol,
         NaiveMarketMakerStrategy marketStrategy,
         IBinanceClient binanceRestClient,
         IBinanceSocketClient webSocketClient,
@@ -152,7 +152,7 @@ public class MarketMakerBot : BaseMarketBot<NaiveMarketMakerStrategy>
             throw new ArgumentNullException(nameof(e));
 
         //  get current opened orders by token
-        var openOrdersResponse = await GetOpenedOrdersAsync(Symbol);
+        var openOrdersResponse = await GetOpenedOrdersAsync(Symbol.FullName);
 
         // cancel already opened orders (if necessary)
         if (openOrdersResponse != null) await CancelOrdersAsync(openOrdersResponse);
@@ -165,7 +165,7 @@ public class MarketMakerBot : BaseMarketBot<NaiveMarketMakerStrategy>
             var newOrderRequest = new CreateOrderRequest
             {
                 // general
-                Symbol = Symbol,
+                Symbol = Symbol.FullName,
                 Side = q.Direction,
                 OrderType = SpotOrderType.Limit,
                 // price-quantity

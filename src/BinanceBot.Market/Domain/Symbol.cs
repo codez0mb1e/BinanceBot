@@ -34,6 +34,8 @@ public record MarketSymbol
     /// The Contract type of the symbol
     /// </summary>
     public ContractType ContractType { get; init; }
+
+    override public string ToString() => $"{BaseAsset}/{QuoteAsset} ({ContractType})";
 }
 
 

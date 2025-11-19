@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Binance.Net.Objects.Models.Spot;
+using BinanceBot.Market.Domain;
 
 
 namespace BinanceBot.Market;
@@ -13,7 +14,7 @@ public interface IMarketBot
     /// <summary>
     /// Symbol
     /// </summary>
-    string Symbol { get; }
+    MarketSymbol Symbol { get; }
 
 
     /// <summary>
