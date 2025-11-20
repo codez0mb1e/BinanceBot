@@ -10,11 +10,11 @@ public class MarketDepthTests
         new MarketDepth(new MarketSymbol("BTC", "USDT", ContractType.Spot));
     
     private static MarketDepth CreateTestMarketDepthPerpetual() => 
-        new MarketDepth(new MarketSymbol("BTC", "USDT", ContractType.Perpetual));
+        new MarketDepth(new MarketSymbol("BTC", "USDT", ContractType.Futures));
    
     [Theory]
     [InlineData(ContractType.Spot)]
-    [InlineData(ContractType.Perpetual)]
+    [InlineData(ContractType.Futures)]
     public void Constructor_WithValidSymbol_CreatesInstance(ContractType contractType)
     {
         // Arrange
@@ -85,7 +85,7 @@ public class MarketDepthTests
         marketDepth.UpdateDepth(asks, bids, 123456);
 
         // Assert
-        Assert.Equal(ContractType.Perpetual, marketDepth.Symbol.ContractType);
+        Assert.Equal(ContractType.Futures, marketDepth.Symbol.ContractType);
         Assert.Equal(123456, marketDepth.LastUpdateId);
         Assert.Equal(2, marketDepth.Asks.Count());
         Assert.Equal(2, marketDepth.Bids.Count());
@@ -206,7 +206,7 @@ public class MarketDepthTests
         Assert.Equal(50000m, bestPair.Ask.Price);
         Assert.Equal(49900m, bestPair.Bid.Price);
         Assert.Equal(100m, bestPair.PriceSpread);
-        Assert.Equal(ContractType.Perpetual, marketDepth.Symbol.ContractType);
+        Assert.Equal(ContractType.Futures, marketDepth.Symbol.ContractType);
     }
 
     [Fact]
