@@ -1,7 +1,5 @@
 using Binance.Net.Objects.Models;
 using BinanceBot.Market.Domain;
-using ContractType = BinanceBot.Market.Domain.ContractType;
-
 namespace BinanceBot.Market.Tests.Core;
 
 public class MarketDepthTests
