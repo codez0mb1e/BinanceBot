@@ -26,7 +26,7 @@ public class MarketDepthTests
         // Assert
         Assert.Equal(symbol, marketDepth.Symbol);
         Assert.Equal(contractType, marketDepth.Symbol.ContractType);
-        Assert.Null(marketDepth.LastUpdateTime);
+        Assert.Null(marketDepth.LastUpdateId);
         Assert.Empty(marketDepth.Asks);
         Assert.Empty(marketDepth.Bids);
     }
@@ -58,7 +58,7 @@ public class MarketDepthTests
         marketDepth.UpdateDepth(asks, bids, 123456);
 
         // Assert
-        Assert.Equal(123456, marketDepth.LastUpdateTime);
+        Assert.Equal(123456, marketDepth.LastUpdateId);
         Assert.Equal(2, marketDepth.Asks.Count());
         Assert.Equal(2, marketDepth.Bids.Count());
         Assert.Equal(50000m, marketDepth.BestAsk.Price);
@@ -86,7 +86,7 @@ public class MarketDepthTests
 
         // Assert
         Assert.Equal(ContractType.Perpetual, marketDepth.Symbol.ContractType);
-        Assert.Equal(123456, marketDepth.LastUpdateTime);
+        Assert.Equal(123456, marketDepth.LastUpdateId);
         Assert.Equal(2, marketDepth.Asks.Count());
         Assert.Equal(2, marketDepth.Bids.Count());
         Assert.Equal(50000m, marketDepth.BestAsk.Price);
@@ -116,7 +116,7 @@ public class MarketDepthTests
         marketDepth.UpdateDepth(newAsks, bids, 123400);
 
         // Assert - should still have old data
-        Assert.Equal(123456, marketDepth.LastUpdateTime);
+        Assert.Equal(123456, marketDepth.LastUpdateId);
         Assert.Equal(50000m, marketDepth.BestAsk.Price);
     }
 

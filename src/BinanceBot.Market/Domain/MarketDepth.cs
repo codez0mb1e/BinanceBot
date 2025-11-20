@@ -59,14 +59,14 @@ public class MarketDepth : IMarketDepthPublisher
     /// <summary>
     /// The best pair. If the order book is empty, will be returned <see langword="null"/>.
     /// </summary>
-    public MarketDepthPair BestPair => LastUpdateTime.HasValue 
-        ? new MarketDepthPair(BestAsk, BestBid, LastUpdateTime.Value) 
+    public MarketDepthPair BestPair => LastUpdateId.HasValue 
+        ? new MarketDepthPair(BestAsk, BestBid, LastUpdateId.Value) 
         : null;
 
     /// <summary>
     /// Last update of market depth
     /// </summary>
-    public long? LastUpdateTime { get; private set; }
+    public long? LastUpdateId { get; private set; }
 
 
 
@@ -77,13 +77,13 @@ public class MarketDepth : IMarketDepthPublisher
     /// Update market depth
     /// </summary>
     /// <remarks>
-    public void UpdateDepth(IEnumerable<BinanceOrderBookEntry> asks, IEnumerable<BinanceOrderBookEntry> bids, long updateTime)
+    public void UpdateDepth(IEnumerable<BinanceOrderBookEntry> asks, IEnumerable<BinanceOrderBookEntry> bids, long updateId)
     {
-        if (updateTime <= 0)
-            throw new ArgumentOutOfRangeException(nameof(updateTime));
+        if (updateId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(updateId));
 
         // if nothing was changed then return
-        if (updateTime <= LastUpdateTime) return;
+        if (updateId <= LastUpdateId) return;
         if (asks == null && bids == null) return;
 
 
@@ -111,10 +111,10 @@ public class MarketDepth : IMarketDepthPublisher
         UpdateOrderBook(asks, _asks);
         UpdateOrderBook(bids, _bids);
         // set new update time
-        LastUpdateTime = updateTime;
+        LastUpdateId = updateId;
 
         // raise events
-        OnMarketDepthChanged(new MarketDepthChangedEventArgs(Asks, Bids, LastUpdateTime.Value));
+        OnMarketDepthChanged(new MarketDepthChangedEventArgs(Asks, Bids, LastUpdateId.Value));
         if(!BestPair.Equals(prevBestPair))
             OnMarketBestPairChanged(new MarketBestPairChangedEventArgs(BestPair));
     }
