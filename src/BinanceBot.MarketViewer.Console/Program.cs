@@ -21,7 +21,7 @@ internal static class Program
 {
     #region Bot Settings
     // WARN: Set necessary token here
-    private static readonly MarketSymbol Symbol = new MarketSymbol("BNB", "USDT", ContractType.Spot);
+    private static readonly MarketSymbol Symbol = new MarketSymbol("BNB", "USDT", ContractType.Perpetual);
     private const int OrderBookDepth = 10;
     private static readonly TimeSpan OrderBookUpdateInterval = TimeSpan.FromMilliseconds(100);
     #endregion
@@ -85,7 +85,6 @@ internal static class Program
             var asks = e.Asks.OrderBy(q => q.Price).Take(OrderBookDepth).ToImmutableArray();
             var bids = e.Bids.OrderByDescending(q => q.Price).Take(OrderBookDepth).ToImmutableArray();
 
-
             orderBookTable.Rows.Clear();
 
             foreach (var row in GetValues(asks))
@@ -95,8 +94,8 @@ internal static class Program
                 orderBookTable.AddRow(String.Empty, $"[green]{row.price}[/]", row.volume);
 
             orderBookTable.Caption = new TableTitle(
-                $"Spread: {e.Asks.Select(q => q.Price).Min() - e.Bids.Select(q => q.Price).Max()}. " +
-                $"Last updated as {DateTimeOffset.FromUnixTimeSeconds(e.UpdateTime):T}\n"
+                $"Spread: {e.Asks.Select(q => q.Price).Min() - e.Bids.Select(q => q.Price).Max()}\n" +
+                $"Update Id: {e.UpdateTime} at {DateTimeOffset.UtcNow:HH:mm:ss.FFF} (UTC+0)\n"
                 );
 
             var dominanceChart = new BreakdownChart()
@@ -109,6 +108,8 @@ internal static class Program
 
             AnsiConsole.Write(orderBookTable);
             AnsiConsole.Write(dominanceChart);
+
+            WriteLine("Press Enter to exit...");
         };
 
 
@@ -117,10 +118,7 @@ internal static class Program
         await marketDepthManager.BuildAsync(marketDepth, OrderBookDepth, OrderBookUpdateInterval, ct);
         Logger.Info("Order book ready and streaming updates...");
 
-
-        WriteLine("Press Enter to exit...");
         ReadLine();
-        
         Logger.Info("Order book viewer stopped");
     }
 }
