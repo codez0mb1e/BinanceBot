@@ -11,6 +11,7 @@ using BinanceBot.Market.Domain;
 using CryptoExchange.Net.Objects;
 using CryptoExchange.Net.Sockets;
 using NLog;
+using Binance.Net.Objects.Models.Futures.Socket;
 
 
 namespace BinanceBot.Market;
@@ -111,7 +112,7 @@ public class MarketDepthManager
 
         // Step 2: Wait a bit to buffer some events
         // Use longer buffer time to ensure we have enough events before snapshot
-        var bufferTimeMs = Math.Max(updateIntervalMs * 5, 500);
+        var bufferTimeMs = Math.Max(updateIntervalMs * 5, 1000);
         _logger.Debug($"2: Buffering events for {bufferTimeMs}ms");
         await Task.Delay(bufferTimeMs, ct).ConfigureAwait(false);
 
@@ -151,8 +152,7 @@ public class MarketDepthManager
         IBinanceEventOrderBook firstEvent = null;
         lock (_eventBuffer)
         {
-            if (_eventBuffer.Count > 0)
-                firstEvent = _eventBuffer.Peek();
+            firstEvent = _eventBuffer.Any() ? _eventBuffer.Peek() : null;
         }
 
         if (firstEvent != null)
@@ -229,13 +229,11 @@ public class MarketDepthManager
 
 
     /// <summary>
-    /// Stream <see cref="MarketDepth"/> updates
-    /// </summary>
-    /// <param name="marketDepth">Market depth</param>
     /// Stream <see cref="MarketDepth"/> updates asynchronously.
     /// </summary>
     /// <param name="marketDepth">Market depth</param>
     /// <param name="updateInterval">Update interval (100ms or 1000ms)</param>
+    /// <param name="ct">Cancellation token</param>
     public async Task StreamUpdatesAsync(MarketDepth marketDepth, TimeSpan? updateInterval = default, CancellationToken ct = default)
     {
         if (marketDepth == null)
@@ -269,6 +267,8 @@ public class MarketDepthManager
 
         _subscription = subscriptionResult.Data;
     }
+    
+    /// <summary>
     /// Stop streaming updates and unsubscribe
     /// </summary>
     public async Task StopStreamingAsync(CancellationToken ct = default)
@@ -308,16 +308,28 @@ public class MarketDepthManager
     private void ApplyDepthUpdate(MarketDepth marketDepth, IBinanceEventOrderBook eventData)
     {
         // Step 7: Apply update procedure
-        
+        long lastUpdateId;
+        switch (marketDepth.Symbol.ContractType)
+        {
+            case ContractType.Spot:
+                lastUpdateId = eventData.LastUpdateId;
+                break;
+            case ContractType.Perpetual:
+                lastUpdateId = (eventData as BinanceFuturesStreamOrderBookDepth).LastUpdateIdStream;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(marketDepth.Symbol.ContractType), "Unknown contract type.");
+        }
+
         // 1. Decide whether the update event can be applied
-        if (eventData.LastUpdateId <= _localOrderBookUpdateId)
+        if (lastUpdateId <= _localOrderBookUpdateId)
         {
             // Event is older than local order book, ignore
-            _logger.Debug($"Ignoring old event: u={eventData.LastUpdateId} <= local={_localOrderBookUpdateId}");
+            _logger.Debug($"Ignoring old event: u={lastUpdateId} <= local={_localOrderBookUpdateId}");
             return;
         }
 
-        if (eventData.FirstUpdateId > _localOrderBookUpdateId + 1)
+        if (lastUpdateId > _localOrderBookUpdateId + 1)
         {
             // Missed some events - need to restart
             _logger.Error($"Missed updates! Expected U <= {_localOrderBookUpdateId + 1}, got U={eventData.FirstUpdateId}");
@@ -331,10 +343,10 @@ public class MarketDepthManager
 
         // 2. Update price levels
         if (_localOrderBookUpdateId % 100 == 0) // Log every 100th update to avoid flooding
-            _logger.Debug($"Applying update: U={eventData.FirstUpdateId}, u={eventData.LastUpdateId}, Asks={eventData.Asks.Count()}, Bids={eventData.Bids.Count()}");
-        marketDepth.UpdateDepth(eventData.Asks, eventData.Bids, eventData.LastUpdateId);
+            _logger.Debug($"Applying update: U={eventData.FirstUpdateId}, u={lastUpdateId}, Asks={eventData.Asks.Count()}, Bids={eventData.Bids.Count()}");
+        marketDepth.UpdateDepth(eventData.Asks, eventData.Bids, lastUpdateId);
         
         // 3. Set order book update ID
-        _localOrderBookUpdateId = eventData.LastUpdateId;
+        _localOrderBookUpdateId = lastUpdateId;
     }
 }
