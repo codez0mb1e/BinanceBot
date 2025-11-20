@@ -11,7 +11,6 @@ using BinanceBot.Market.Domain;
 using CryptoExchange.Net.Objects;
 using CryptoExchange.Net.Sockets;
 using NLog;
-using Binance.Net.Objects.Models.Futures.Socket;
 
 
 namespace BinanceBot.Market;
