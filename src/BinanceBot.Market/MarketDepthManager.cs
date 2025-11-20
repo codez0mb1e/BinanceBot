@@ -285,6 +285,7 @@ public class MarketDepthManager
 
     private void OnFuturesOrderBookUpdate(MarketDepth marketDepth, DataEvent<IBinanceFuturesEventOrderBook> eventData) => 
         OnDepthUpdate(marketDepth, eventData.Data);
+
     private void OnDepthUpdate(MarketDepth marketDepth, IBinanceEventOrderBook eventData)
     {
         if (eventData == null) return;
