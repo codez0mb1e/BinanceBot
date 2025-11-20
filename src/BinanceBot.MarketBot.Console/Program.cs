@@ -20,7 +20,7 @@ internal static class Program
 {
     #region Bot Settings
     // WARN: set necessary token here
-     private static readonly MarketSymbol Symbol = new MarketSymbol("BNB", "USDT", BinanceBot.Market.Domain.ContractType.Spot);
+    private static readonly MarketSymbol Symbol = new MarketSymbol("BNB", "USDT", BinanceBot.Market.Domain.ContractType.Spot);
     private static readonly TimeSpan ReceiveWindow = TimeSpan.FromMilliseconds(100);
     #endregion
 
