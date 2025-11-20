@@ -49,7 +49,7 @@ public enum ContractType
     /// </summary>
     Spot,
     /// <summary>
-    /// Perpetual Futures contract
+    /// Futures contract
     /// </summary>
-    Perpetual
+    Futures
 }
