@@ -112,7 +112,7 @@ public class MarketDepthManager
 
         // Step 2: Wait a bit to buffer some events
         // Use longer buffer time to ensure we have enough events before snapshot
-        var bufferTimeMs = Math.Max(updateIntervalMs * 5, 1000);
+        var bufferTimeMs = Math.Max(updateIntervalMs * 5, 500);
         _logger.Debug($"2: Buffering events for {bufferTimeMs}ms");
         await Task.Delay(bufferTimeMs, ct).ConfigureAwait(false);
 
