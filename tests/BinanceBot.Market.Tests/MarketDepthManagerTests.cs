@@ -1,7 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Binance.Net.Interfaces.Clients;
-using BinanceBot.Market.Core;
 using BinanceBot.Market.Domain;
 using Moq;
 using NLog;
