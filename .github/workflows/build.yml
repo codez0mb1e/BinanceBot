@@ -13,10 +13,6 @@ concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: true
 
-defaults:
- run:
-  working-directory: ./src
-
 jobs:
   build:
 
@@ -46,12 +42,14 @@ jobs:
 
     - name: Restore dependencies
       run: dotnet restore --verbosity minimal
+      working-directory: ./src
     
     - name: Build
       run: dotnet build --no-restore --configuration ${{ matrix.configuration }} --nologo
+      working-directory: ./src
     
     - name: Test
-      run: dotnet test BinanceBot.sln --no-build --configuration ${{ matrix.configuration }} --collect:"XPlat Code Coverage" --logger "trx;LogFileName=test_results.trx"
+      run: dotnet test --no-build --configuration ${{ matrix.configuration }} --collect:"XPlat Code Coverage" --logger "trx;LogFileName=test_results.trx"
 
     - name: Upload test results
       if: always()
@@ -82,6 +80,7 @@ jobs:
           -c Release \
           -o ./publish/MarketViewer \
           --no-build
+      working-directory: ./src
 
     - name: Upload published artifacts
       if: matrix.configuration == 'Release'

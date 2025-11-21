@@ -5,7 +5,7 @@ ARG PROJECT_NAME=BinanceBot.MarketViewer.Console
 WORKDIR /src
 
 # Copy solution and project files for better layer caching
-COPY src/*.sln ./
+COPY *.sln ./
 COPY src/BinanceBot.Market/*.csproj ./BinanceBot.Market/
 COPY src/BinanceBot.MarketBot.Console/*.csproj ./BinanceBot.MarketBot.Console/
 COPY src/BinanceBot.MarketViewer.Console/*.csproj ./BinanceBot.MarketViewer.Console/

@@ -3,18 +3,18 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31613.86
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinanceBot.Market", "BinanceBot.Market\BinanceBot.Market.csproj", "{AD93580C-2CEC-4695-89E7-2029F6E44D32}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinanceBot.Market", "src\BinanceBot.Market\BinanceBot.Market.csproj", "{AD93580C-2CEC-4695-89E7-2029F6E44D32}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinanceBot.MarketBot.Console", "BinanceBot.MarketBot.Console\BinanceBot.MarketBot.Console.csproj", "{F2327623-18BC-4176-AA9C-D7A5F1A0255D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinanceBot.MarketBot.Console", "src\BinanceBot.MarketBot.Console\BinanceBot.MarketBot.Console.csproj", "{F2327623-18BC-4176-AA9C-D7A5F1A0255D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinanceBot.MarketViewer.Console", "BinanceBot.MarketViewer.Console\BinanceBot.MarketViewer.Console.csproj", "{7912A437-0EC4-4939-B244-9379927AB0D1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinanceBot.MarketViewer.Console", "src\BinanceBot.MarketViewer.Console\BinanceBot.MarketViewer.Console.csproj", "{7912A437-0EC4-4939-B244-9379927AB0D1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B6FD43FF-5A63-4978-8444-5F06FCB9C5C0}"
 	ProjectSection(SolutionItems) = preProject
-		..\README.md = ..\README.md
+		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinanceBot.Market.Tests", "..\tests\BinanceBot.Market.Tests\BinanceBot.Market.Tests.csproj", "{C2DCC04A-3BF3-4568-96D9-5E54B4952657}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinanceBot.Market.Tests", "tests\BinanceBot.Market.Tests\BinanceBot.Market.Tests.csproj", "{C2DCC04A-3BF3-4568-96D9-5E54B4952657}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
