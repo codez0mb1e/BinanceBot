@@ -67,7 +67,7 @@ public class MarketDepthManager
     /// <exception cref="InvalidOperationException">Thrown when the API request fails</exception>
     private async Task<IBinanceOrderBook> GetOrderBookSnapshotAsync(MarketSymbol symbol, short orderBookDepth, CancellationToken ct)
     {
-        (bool Success, IBinanceOrderBook Data, Error Error) response;
+        (bool Success, IBinanceOrderBook Data, Error? Error) response;
 
         switch (symbol.ContractType)
         {
