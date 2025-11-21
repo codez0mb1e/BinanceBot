@@ -28,34 +28,44 @@ public record MarketSymbol
     /// <summary>
     /// Initializes a new instance of the <see cref="MarketSymbol"/> class.
     /// </summary>
-    /// <param name="baseAsset"></param>
-    /// <param name="quoteAsset"></param>
-    /// <param name="contractType"></param>
-    /// <exception cref="ArgumentNullException">Thrown when baseAsset or quoteAsset is null.</exception>
+    /// <param name="baseAsset">The base asset of the trading pair (e.g., "BTC", "ETH")</param>
+    /// <param name="quoteAsset">The quote asset of the trading pair (e.g., "USDT", "BTC")</param>
+    /// <param name="contractType">The contract type (Spot or Futures)</param>
+    /// <exception cref="ArgumentException">Thrown when baseAsset or quoteAsset is null, empty or whitespace.</exception>
     public MarketSymbol(string baseAsset, string quoteAsset, ContractType contractType)
     {
-        BaseAsset = baseAsset ?? throw new ArgumentNullException(nameof(baseAsset));
-        QuoteAsset = quoteAsset ?? throw new ArgumentNullException(nameof(quoteAsset));
+        if (string.IsNullOrWhiteSpace(baseAsset))
+            throw new ArgumentException("Base asset cannot be empty or whitespace", nameof(baseAsset));
+        if (string.IsNullOrWhiteSpace(quoteAsset))
+            throw new ArgumentException("Quote asset cannot be empty or whitespace", nameof(quoteAsset));
+        
+        BaseAsset = baseAsset.Trim().ToUpperInvariant();
+        QuoteAsset = quoteAsset.Trim().ToUpperInvariant();
         ContractType = contractType;
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MarketSymbol"/> class from a pair string.
     /// </summary>
-    /// <param name="pair">The trading pair in the format "BASE/QUOTE".</param>
+    /// <param name="pair">The trading pair in the format "BASE/QUOTE" (e.g., "BTC/USDT", "ETH/BTC")</param>
     /// <param name="contractType">The contract type (Spot or Futures). Defaults to Spot.</param>
-    /// <exception cref="ArgumentException">Thrown when the pair format is invalid.</exception>
+    /// <exception cref="ArgumentException">Thrown when the pair is null, empty, or not in the correct format.</exception>
     public MarketSymbol(string pair, ContractType contractType = ContractType.Spot)
     {
         if (string.IsNullOrWhiteSpace(pair))
             throw new ArgumentException("Pair cannot be null or empty", nameof(pair));
         
-        var assets = pair.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var assets = pair.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (assets.Length != 2)
-            throw new ArgumentException("Pair must be in the format 'BASE/QUOTE'", nameof(pair));
+            throw new ArgumentException("Pair must be in the format 'BASE/QUOTE' (e.g., 'BTC/USDT')", nameof(pair));
+        
+        if (string.IsNullOrWhiteSpace(assets[0]))
+            throw new ArgumentException("Base asset cannot be empty", nameof(pair));
+        if (string.IsNullOrWhiteSpace(assets[1]))
+            throw new ArgumentException("Quote asset cannot be empty", nameof(pair));
 
-        BaseAsset = assets[0];
-        QuoteAsset = assets[1];
+        BaseAsset = assets[0].ToUpperInvariant();
+        QuoteAsset = assets[1].ToUpperInvariant();
         ContractType = contractType;
     }
 
@@ -70,14 +80,17 @@ public record MarketSymbol
     public string QuoteAsset { get; init; }
 
     /// <summary>
-    /// The symbol name, can be used to overwrite the default formatted name
+    /// The symbol name in Binance API format (e.g., "BTCUSDT")
     /// </summary>
     public string FullName => $"{BaseAsset}{QuoteAsset}";
 
     /// <summary>
-    /// The Contract type of the symbol
+    /// The contract type of the symbol (Spot or Futures)
     /// </summary>
     public ContractType ContractType { get; init; }
 
-    override public string ToString() => $"{BaseAsset}/{QuoteAsset} ({ContractType})";
+    /// <summary>
+    /// Returns a string representation in the format "BASE/QUOTE (ContractType)" (e.g., "BTC/USDT (Spot)")
+    /// </summary>
+    public override string ToString() => $"{BaseAsset}/{QuoteAsset} ({ContractType})";
 }
