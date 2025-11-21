@@ -317,6 +317,14 @@ public class MarketDepthManager
             _logger.Debug($"Ignoring old event: u={lastUpdateId} <= local={_localOrderBookUpdateId}");
             return;
         }
+        // Critical validation: check for missed updates
+        if (eventData.FirstUpdateId > _localOrderBookUpdateId + 1)
+        {
+            _logger.Error($"Missed updates! Expected U <= {_localOrderBookUpdateId + 1}, got U={eventData.FirstUpdateId}");
+            throw new InvalidOperationException(
+                $"Missed order book updates. Expected U <= {_localOrderBookUpdateId + 1}, got {eventData.FirstUpdateId}. " +
+                "Local order book is out of sync. Please restart the process.");
+        }
 
         // 2. Update price levels
         if (_localOrderBookUpdateId % 100 == 0) // Log every 100th update to avoid flooding
