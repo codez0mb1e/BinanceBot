@@ -47,19 +47,19 @@ public class MarketSymbolTests
     }
 
     [Fact]
-    public void Constructor_WithNullBaseAsset_ThrowsArgumentNullException()
+    public void Constructor_WithNullBaseAsset_ThrowsArgumentException()
     {
         // Act & Assert
-        var ex = Assert.Throws<ArgumentNullException>(() => 
+        var ex = Assert.Throws<ArgumentException>(() => 
             new MarketSymbol(null, "USDT", ContractType.Spot));
         Assert.Equal("baseAsset", ex.ParamName);
     }
 
     [Fact]
-    public void Constructor_WithNullQuoteAsset_ThrowsArgumentNullException()
+    public void Constructor_WithNullQuoteAsset_ThrowsArgumentException()
     {
         // Act & Assert
-        var ex = Assert.Throws<ArgumentNullException>(() => 
+        var ex = Assert.Throws<ArgumentException>(() => 
             new MarketSymbol("BTC", null, ContractType.Spot));
         Assert.Equal("quoteAsset", ex.ParamName);
     }
