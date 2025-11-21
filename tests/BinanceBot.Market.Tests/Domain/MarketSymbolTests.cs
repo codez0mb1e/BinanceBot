@@ -6,274 +6,274 @@ public class MarketSymbolTests
 {
     #region Constructor Tests - Three Parameters
 
-    [Fact]
-    public void Constructor_WithValidParameters_CreatesInstance()
+    [Test]
+    public async Task Constructor_WithValidParameters_CreatesInstance()
     {
         // Arrange & Act
         var symbol = new MarketSymbol("BTC", "USDT", ContractType.Spot);
 
         // Assert
-        Assert.Equal("BTC", symbol.BaseAsset);
-        Assert.Equal("USDT", symbol.QuoteAsset);
-        Assert.Equal(ContractType.Spot, symbol.ContractType);
-        Assert.Equal("BTCUSDT", symbol.FullName);
-        Assert.Equal("BTC/USDT (Spot)", symbol.ToString());
+        await Assert.That(symbol.BaseAsset).IsEqualTo("BTC");
+        await Assert.That(symbol.QuoteAsset).IsEqualTo("USDT");
+        await Assert.That(symbol.ContractType).IsEqualTo(ContractType.Spot);
+        await Assert.That(symbol.FullName).IsEqualTo("BTCUSDT");
+        await Assert.That(symbol.ToString()).IsEqualTo("BTC/USDT (Spot)");
     }
 
-    [Theory]
-    [InlineData("btc", "usdt", "BTC", "USDT")]
-    [InlineData("BTC", "USDT", "BTC", "USDT")]
-    [InlineData("Eth", "BtC", "ETH", "BTC")]
-    [InlineData(" BNB ", " BUSD ", "BNB", "BUSD")]
-    public void Constructor_NormalizesToUpperCase(string baseInput, string quoteInput, string expectedBase, string expectedQuote)
+    [Test]
+    [Arguments("btc", "usdt", "BTC", "USDT")]
+    [Arguments("BTC", "USDT", "BTC", "USDT")]
+    [Arguments("Eth", "BtC", "ETH", "BTC")]
+    [Arguments(" BNB ", " BUSD ", "BNB", "BUSD")]
+    public async Task Constructor_NormalizesToUpperCase(string baseInput, string quoteInput, string expectedBase, string expectedQuote)
     {
         // Act
         var symbol = new MarketSymbol(baseInput, quoteInput, ContractType.Spot);
 
         // Assert
-        Assert.Equal(expectedBase, symbol.BaseAsset);
-        Assert.Equal(expectedQuote, symbol.QuoteAsset);
+        await Assert.That(symbol.BaseAsset).IsEqualTo(expectedBase);
+        await Assert.That(symbol.QuoteAsset).IsEqualTo(expectedQuote);
     }
 
-    [Fact]
-    public void Constructor_WithFuturesContractType_CreatesInstance()
+    [Test]
+    public async Task Constructor_WithFuturesContractType_CreatesInstance()
     {
         // Act
         var symbol = new MarketSymbol("ETH", "USDT", ContractType.Futures);
 
         // Assert
-        Assert.Equal(ContractType.Futures, symbol.ContractType);
-        Assert.Equal("ETH/USDT (Futures)", symbol.ToString());
+        await Assert.That(symbol.ContractType).IsEqualTo(ContractType.Futures);
+        await Assert.That(symbol.ToString()).IsEqualTo("ETH/USDT (Futures)");
     }
 
-    [Fact]
-    public void Constructor_WithNullBaseAsset_ThrowsArgumentException()
+    [Test]
+    public async Task Constructor_WithNullBaseAsset_ThrowsArgumentException()
     {
         // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() => 
-            new MarketSymbol(null, "USDT", ContractType.Spot));
-        Assert.Equal("baseAsset", ex.ParamName);
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => 
+            Task.FromResult(new MarketSymbol(null, "USDT", ContractType.Spot)));
+        await Assert.That(ex.ParamName).IsEqualTo("baseAsset");
     }
 
-    [Fact]
-    public void Constructor_WithNullQuoteAsset_ThrowsArgumentException()
+    [Test]
+    public async Task Constructor_WithNullQuoteAsset_ThrowsArgumentException()
     {
         // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() => 
-            new MarketSymbol("BTC", null, ContractType.Spot));
-        Assert.Equal("quoteAsset", ex.ParamName);
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => 
+            Task.FromResult(new MarketSymbol("BTC", null, ContractType.Spot)));
+        await Assert.That(ex.ParamName).IsEqualTo("quoteAsset");
     }
 
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    [InlineData("\t")]
-    public void Constructor_WithEmptyBaseAsset_ThrowsArgumentException(string emptyValue)
+    [Test]
+    [Arguments("")]
+    [Arguments("   ")]
+    [Arguments("\t")]
+    public async Task Constructor_WithEmptyBaseAsset_ThrowsArgumentException(string emptyValue)
     {
         // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() => 
-            new MarketSymbol(emptyValue, "USDT", ContractType.Spot));
-        Assert.Equal("baseAsset", ex.ParamName);
-        Assert.Contains("empty or whitespace", ex.Message);
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => 
+            Task.FromResult(new MarketSymbol(emptyValue, "USDT", ContractType.Spot)));
+        await Assert.That(ex.ParamName).IsEqualTo("baseAsset");
+        await Assert.That(ex.Message).Contains("empty or whitespace");
     }
 
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    [InlineData("\t")]
-    public void Constructor_WithEmptyQuoteAsset_ThrowsArgumentException(string emptyValue)
+    [Test]
+    [Arguments("")]
+    [Arguments("   ")]
+    [Arguments("\t")]
+    public async Task Constructor_WithEmptyQuoteAsset_ThrowsArgumentException(string emptyValue)
     {
         // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() => 
-            new MarketSymbol("BTC", emptyValue, ContractType.Spot));
-        Assert.Equal("quoteAsset", ex.ParamName);
-        Assert.Contains("empty or whitespace", ex.Message);
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => 
+            Task.FromResult(new MarketSymbol("BTC", emptyValue, ContractType.Spot)));
+        await Assert.That(ex.ParamName).IsEqualTo("quoteAsset");
+        await Assert.That(ex.Message).Contains("empty or whitespace");
     }
 
     #endregion
 
     #region Constructor Tests - Pair String
 
-    [Theory]
-    [InlineData("BTC/USDT", "BTC", "USDT")]
-    [InlineData("ETH/BTC", "ETH", "BTC")]
-    [InlineData("BNB/BUSD", "BNB", "BUSD")]
-    [InlineData("DOGE/USDT", "DOGE", "USDT")]
-    public void Constructor_WithValidPair_CreatesInstance(string pair, string expectedBase, string expectedQuote)
+    [Test]
+    [Arguments("BTC/USDT", "BTC", "USDT")]
+    [Arguments("ETH/BTC", "ETH", "BTC")]
+    [Arguments("BNB/BUSD", "BNB", "BUSD")]
+    [Arguments("DOGE/USDT", "DOGE", "USDT")]
+    public async Task Constructor_WithValidPair_CreatesInstance(string pair, string expectedBase, string expectedQuote)
     {
         // Act
         var symbol = new MarketSymbol(pair);
 
         // Assert
-        Assert.Equal(expectedBase, symbol.BaseAsset);
-        Assert.Equal(expectedQuote, symbol.QuoteAsset);
-        Assert.Equal(ContractType.Spot, symbol.ContractType);
+        await Assert.That(symbol.BaseAsset).IsEqualTo(expectedBase);
+        await Assert.That(symbol.QuoteAsset).IsEqualTo(expectedQuote);
+        await Assert.That(symbol.ContractType).IsEqualTo(ContractType.Spot);
     }
 
-    [Theory]
-    [InlineData("btc/usdt", "BTC", "USDT")]
-    [InlineData("Eth/Btc", "ETH", "BTC")]
-    [InlineData(" BNB / BUSD ", "BNB", "BUSD")]
-    public void Constructor_WithPair_NormalizesToUpperCase(string pair, string expectedBase, string expectedQuote)
+    [Test]
+    [Arguments("btc/usdt", "BTC", "USDT")]
+    [Arguments("Eth/Btc", "ETH", "BTC")]
+    [Arguments(" BNB / BUSD ", "BNB", "BUSD")]
+    public async Task Constructor_WithPair_NormalizesToUpperCase(string pair, string expectedBase, string expectedQuote)
     {
         // Act
         var symbol = new MarketSymbol(pair);
 
         // Assert
-        Assert.Equal(expectedBase, symbol.BaseAsset);
-        Assert.Equal(expectedQuote, symbol.QuoteAsset);
+        await Assert.That(symbol.BaseAsset).IsEqualTo(expectedBase);
+        await Assert.That(symbol.QuoteAsset).IsEqualTo(expectedQuote);
     }
 
-    [Fact]
-    public void Constructor_WithPairAndFutures_CreatesInstance()
+    [Test]
+    public async Task Constructor_WithPairAndFutures_CreatesInstance()
     {
         // Act
         var symbol = new MarketSymbol("BTC/USDT", ContractType.Futures);
 
         // Assert
-        Assert.Equal("BTC", symbol.BaseAsset);
-        Assert.Equal("USDT", symbol.QuoteAsset);
-        Assert.Equal(ContractType.Futures, symbol.ContractType);
+        await Assert.That(symbol.BaseAsset).IsEqualTo("BTC");
+        await Assert.That(symbol.QuoteAsset).IsEqualTo("USDT");
+        await Assert.That(symbol.ContractType).IsEqualTo(ContractType.Futures);
     }
 
-    [Theory]
-    [InlineData(null!)]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void Constructor_WithNullOrEmptyPair_ThrowsArgumentException(string? invalidPair)
+    [Test]
+    [Arguments(null!)]
+    [Arguments("")]
+    [Arguments("   ")]
+    public async Task Constructor_WithNullOrEmptyPair_ThrowsArgumentException(string? invalidPair)
     {
         // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() => 
-            new MarketSymbol(invalidPair));
-        Assert.Equal("pair", ex.ParamName);
-        Assert.Contains("null or empty", ex.Message);
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => 
+            Task.FromResult(new MarketSymbol(invalidPair)));
+        await Assert.That(ex.ParamName).IsEqualTo("pair");
+        await Assert.That(ex.Message).Contains("null or empty");
     }
 
-    [Theory]
-    [InlineData("BTCUSDT")]
-    [InlineData("BTC")]
-    [InlineData("BTC/USDT/EUR")]
-    [InlineData("BTC-USDT")]
-    public void Constructor_WithInvalidPairFormat_ThrowsArgumentException(string invalidPair)
+    [Test]
+    [Arguments("BTCUSDT")]
+    [Arguments("BTC")]
+    [Arguments("BTC/USDT/EUR")]
+    [Arguments("BTC-USDT")]
+    public async Task Constructor_WithInvalidPairFormat_ThrowsArgumentException(string invalidPair)
     {
         // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() => 
-            new MarketSymbol(invalidPair));
-        Assert.Equal("pair", ex.ParamName);
-        Assert.Contains("BASE/QUOTE", ex.Message);
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => 
+            Task.FromResult(new MarketSymbol(invalidPair)));
+        await Assert.That(ex.ParamName).IsEqualTo("pair");
+        await Assert.That(ex.Message).Contains("BASE/QUOTE");
     }
 
-    [Theory]
-    [InlineData("/USDT")]
-    [InlineData("BTC/")]
-    [InlineData(" / ")]
-    public void Constructor_WithEmptyAssetInPair_ThrowsArgumentException(string invalidPair)
+    [Test]
+    [Arguments("/USDT")]
+    [Arguments("BTC/")]
+    [Arguments(" / ")]
+    public async Task Constructor_WithEmptyAssetInPair_ThrowsArgumentException(string invalidPair)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => 
-            new MarketSymbol(invalidPair));
+        await Assert.ThrowsAsync<ArgumentException>(() => 
+            Task.FromResult(new MarketSymbol(invalidPair)));
     }
 
     #endregion
 
     #region Property Tests
 
-    [Fact]
-    public void FullName_ReturnsCorrectFormat()
+    [Test]
+    public async Task FullName_ReturnsCorrectFormat()
     {
         // Arrange
         var symbol = new MarketSymbol("BTC", "USDT", ContractType.Spot);
 
         // Act & Assert
-        Assert.Equal("BTCUSDT", symbol.FullName);
+        await Assert.That(symbol.FullName).IsEqualTo("BTCUSDT");
     }
 
-    [Fact]
-    public void ToString_ReturnsCorrectFormat()
+    [Test]
+    public async Task ToString_ReturnsCorrectFormat()
     {
         // Arrange
         var spotSymbol = new MarketSymbol("BTC", "USDT", ContractType.Spot);
         var futuresSymbol = new MarketSymbol("ETH", "BTC", ContractType.Futures);
 
         // Act & Assert
-        Assert.Equal("BTC/USDT (Spot)", spotSymbol.ToString());
-        Assert.Equal("ETH/BTC (Futures)", futuresSymbol.ToString());
+        await Assert.That(spotSymbol.ToString()).IsEqualTo("BTC/USDT (Spot)");
+        await Assert.That(futuresSymbol.ToString()).IsEqualTo("ETH/BTC (Futures)");
     }
 
     #endregion
 
     #region Record Equality Tests
 
-    [Fact]
-    public void Equals_WithSameValues_ReturnsTrue()
+    [Test]
+    public async Task Equals_WithSameValues_ReturnsTrue()
     {
         // Arrange
         var symbol1 = new MarketSymbol("BTC", "USDT", ContractType.Spot);
         var symbol2 = new MarketSymbol("BTC", "USDT", ContractType.Spot);
 
         // Act & Assert
-        Assert.Equal(symbol1, symbol2);
-        Assert.True(symbol1 == symbol2);
+        await Assert.That(symbol1).IsEqualTo(symbol2);
+        await Assert.That(symbol1 == symbol2).IsTrue();
     }
 
-    [Fact]
-    public void Equals_WithDifferentBaseAsset_ReturnsFalse()
+    [Test]
+    public async Task Equals_WithDifferentBaseAsset_ReturnsFalse()
     {
         // Arrange
         var symbol1 = new MarketSymbol("BTC", "USDT", ContractType.Spot);
         var symbol2 = new MarketSymbol("ETH", "USDT", ContractType.Spot);
 
         // Act & Assert
-        Assert.NotEqual(symbol1, symbol2);
-        Assert.True(symbol1 != symbol2);
+        await Assert.That(symbol1).IsNotEqualTo(symbol2);
+        await Assert.That(symbol1 != symbol2).IsTrue();
     }
 
-    [Fact]
-    public void Equals_WithDifferentContractType_ReturnsFalse()
+    [Test]
+    public async Task Equals_WithDifferentContractType_ReturnsFalse()
     {
         // Arrange
         var symbol1 = new MarketSymbol("BTC", "USDT", ContractType.Spot);
         var symbol2 = new MarketSymbol("BTC", "USDT", ContractType.Futures);
 
         // Act & Assert
-        Assert.NotEqual(symbol1, symbol2);
+        await Assert.That(symbol1).IsNotEqualTo(symbol2);
     }
 
-    [Fact]
-    public void GetHashCode_WithSameValues_ReturnsSameHashCode()
+    [Test]
+    public async Task GetHashCode_WithSameValues_ReturnsSameHashCode()
     {
         // Arrange
         var symbol1 = new MarketSymbol("BTC", "USDT", ContractType.Spot);
         var symbol2 = new MarketSymbol("BTC", "USDT", ContractType.Spot);
 
         // Act & Assert
-        Assert.Equal(symbol1.GetHashCode(), symbol2.GetHashCode());
+        await Assert.That(symbol1.GetHashCode()).IsEqualTo(symbol2.GetHashCode());
     }
 
     #endregion
 
     #region Integration Tests
 
-    [Fact]
-    public void BothConstructors_WithSameData_CreateEqualInstances()
+    [Test]
+    public async Task BothConstructors_WithSameData_CreateEqualInstances()
     {
         // Arrange & Act
         var symbol1 = new MarketSymbol("BTC", "USDT", ContractType.Spot);
         var symbol2 = new MarketSymbol("BTC/USDT", ContractType.Spot);
 
         // Assert
-        Assert.Equal(symbol1, symbol2);
+        await Assert.That(symbol1).IsEqualTo(symbol2);
     }
 
-    [Fact]
-    public void BothConstructors_WithCaseInsensitiveInput_CreateEqualInstances()
+    [Test]
+    public async Task BothConstructors_WithCaseInsensitiveInput_CreateEqualInstances()
     {
         // Arrange & Act
         var symbol1 = new MarketSymbol("btc", "usdt", ContractType.Futures);
         var symbol2 = new MarketSymbol("BTC/USDT", ContractType.Futures);
 
         // Assert
-        Assert.Equal(symbol1, symbol2);
+        await Assert.That(symbol1).IsEqualTo(symbol2);
     }
 
     #endregion

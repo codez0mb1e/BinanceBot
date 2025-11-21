@@ -23,41 +23,41 @@ public class MarketDepthManagerTests
     private static MarketDepth CreateTestMarketDepth() => 
         new MarketDepth(new MarketSymbol("BTC", "USDT", ContractType.Spot));
 
-    [Fact]
-    public void Constructor_WithNullRestClient_ThrowsArgumentNullException()
+    [Test]
+    public async Task Constructor_WithNullRestClient_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => 
-            new MarketDepthManager(null, _mockSocketClient.Object, _mockLogger.Object));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => 
+            Task.FromResult(new MarketDepthManager(null, _mockSocketClient.Object, _mockLogger.Object)));
     }
 
-    [Fact]
-    public void Constructor_WithNullSocketClient_ThrowsArgumentNullException()
+    [Test]
+    public async Task Constructor_WithNullSocketClient_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => 
-            new MarketDepthManager(_mockRestClient.Object, null, _mockLogger.Object));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => 
+            Task.FromResult(new MarketDepthManager(_mockRestClient.Object, null, _mockLogger.Object)));
     }
 
-    [Fact]
-    public void Constructor_WithNullLogger_ThrowsArgumentNullException()
+    [Test]
+    public async Task Constructor_WithNullLogger_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => 
-            new MarketDepthManager(_mockRestClient.Object, _mockSocketClient.Object, null));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => 
+            Task.FromResult(new MarketDepthManager(_mockRestClient.Object, _mockSocketClient.Object, null)));
     }
 
-    [Fact]
-    public void Constructor_WithValidParameters_CreatesInstance()
+    [Test]
+    public async Task Constructor_WithValidParameters_CreatesInstance()
     {
         // Act
         var manager = new MarketDepthManager(_mockRestClient.Object, _mockSocketClient.Object, _mockLogger.Object);
 
         // Assert
-        Assert.NotNull(manager);
+        await Assert.That(manager).IsNotNull();
     }
 
-    [Fact]
+    [Test]
     public async Task BuildAsync_WithNullMarketDepth_ThrowsArgumentNullException()
     {
         // Arrange
@@ -68,7 +68,7 @@ public class MarketDepthManagerTests
             manager.BuildAsync(null));
     }
 
-    [Fact]
+    [Test]
     public async Task BuildAsync_WithZeroOrderBookDepth_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
@@ -80,7 +80,7 @@ public class MarketDepthManagerTests
             manager.BuildAsync(marketDepth, updateInterval: null, orderBookDepth: 0));
     }
 
-    [Fact]
+    [Test]
     public async Task BuildAsync_WithNegativeOrderBookDepth_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
@@ -92,7 +92,7 @@ public class MarketDepthManagerTests
             manager.BuildAsync(marketDepth, updateInterval: null, orderBookDepth: -5));
     }
 
-    [Fact]
+    [Test]
     public async Task BuildAsync_WithNegativeUpdateInterval_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
@@ -104,7 +104,7 @@ public class MarketDepthManagerTests
             manager.BuildAsync(marketDepth, updateInterval: TimeSpan.FromMilliseconds(-100)));
     }
 
-    [Fact]
+    [Test]
     public async Task BuildAsync_WithZeroUpdateInterval_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
@@ -116,7 +116,7 @@ public class MarketDepthManagerTests
             manager.BuildAsync(marketDepth, updateInterval: TimeSpan.Zero));
     }
 
-    [Fact]
+    [Test]
     public async Task StreamUpdates_WithNullMarketDepth_ThrowsArgumentNullException()
     {
         // Arrange
@@ -127,13 +127,15 @@ public class MarketDepthManagerTests
             manager.StreamUpdatesAsync(null));
     }
 
-    [Fact]
+    [Test]
     public async Task StopStreamingAsync_WithoutActiveSubscription_DoesNotThrow()
     {
         // Arrange
         var manager = new MarketDepthManager(_mockRestClient.Object, _mockSocketClient.Object, _mockLogger.Object);
 
-        // Act & Assert - should not throw
+        // Act - should not throw
         await manager.StopStreamingAsync();
+        
+        // If we get here, no exception was thrown - test passes
     }
 }

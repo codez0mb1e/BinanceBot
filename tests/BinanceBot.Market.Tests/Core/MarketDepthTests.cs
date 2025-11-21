@@ -10,10 +10,10 @@ public class MarketDepthTests
     private static MarketDepth CreateTestMarketDepthPerpetual() => 
         new MarketDepth(new MarketSymbol("BTC", "USDT", ContractType.Futures));
    
-    [Theory]
-    [InlineData(ContractType.Spot)]
-    [InlineData(ContractType.Futures)]
-    public void Constructor_WithValidSymbol_CreatesInstance(ContractType contractType)
+    [Test]
+    [Arguments(ContractType.Spot)]
+    [Arguments(ContractType.Futures)]
+    public async Task Constructor_WithValidSymbol_CreatesInstance(ContractType contractType)
     {
         // Arrange
         var symbol = new MarketSymbol("BTC", "USDT", contractType);
@@ -22,22 +22,23 @@ public class MarketDepthTests
         var marketDepth = new MarketDepth(symbol);
 
         // Assert
-        Assert.Equal(symbol, marketDepth.Symbol);
-        Assert.Equal(contractType, marketDepth.Symbol.ContractType);
-        Assert.Null(marketDepth.LastUpdateId);
-        Assert.Empty(marketDepth.Asks);
-        Assert.Empty(marketDepth.Bids);
+        await Assert.That(marketDepth.Symbol).IsEqualTo(symbol);
+        await Assert.That(marketDepth.Symbol.ContractType).IsEqualTo(contractType);
+        await Assert.That(marketDepth.LastUpdateId).IsNull();
+        await Assert.That(marketDepth.Asks).IsEmpty();
+        await Assert.That(marketDepth.Bids).IsEmpty();
     }
 
-    [Fact]
-    public void Constructor_WithNullSymbol_ThrowsArgumentException()
+    [Test]
+    public async Task Constructor_WithNullSymbol_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => new MarketDepth(null));
+        await Assert.ThrowsAsync<ArgumentException>(() => 
+            Task.FromResult(new MarketDepth(null)));
     }
 
-    [Fact]
-    public void UpdateDepth_WithValidData_UpdatesOrderBook()
+    [Test]
+    public async Task UpdateDepth_WithValidData_UpdatesOrderBook()
     {
         // Arrange
         var marketDepth = CreateTestMarketDepth();
@@ -56,15 +57,15 @@ public class MarketDepthTests
         marketDepth.UpdateDepth(asks, bids, 123456);
 
         // Assert
-        Assert.Equal(123456, marketDepth.LastUpdateId);
-        Assert.Equal(2, marketDepth.Asks.Count());
-        Assert.Equal(2, marketDepth.Bids.Count());
-        Assert.Equal(50000m, marketDepth.BestAsk.Price);
-        Assert.Equal(49900m, marketDepth.BestBid.Price);
+        await Assert.That(marketDepth.LastUpdateId).IsEqualTo(123456);
+        await Assert.That(marketDepth.Asks.Count()).IsEqualTo(2);
+        await Assert.That(marketDepth.Bids.Count()).IsEqualTo(2);
+        await Assert.That(marketDepth.BestAsk.Price).IsEqualTo(50000m);
+        await Assert.That(marketDepth.BestBid.Price).IsEqualTo(49900m);
     }
 
-    [Fact]
-    public void UpdateDepth_WithValidData_UpdatesOrderBook_Perpetual()
+    [Test]
+    public async Task UpdateDepth_WithValidData_UpdatesOrderBook_Perpetual()
     {
         // Arrange
         var marketDepth = CreateTestMarketDepthPerpetual();
@@ -83,16 +84,16 @@ public class MarketDepthTests
         marketDepth.UpdateDepth(asks, bids, 123456);
 
         // Assert
-        Assert.Equal(ContractType.Futures, marketDepth.Symbol.ContractType);
-        Assert.Equal(123456, marketDepth.LastUpdateId);
-        Assert.Equal(2, marketDepth.Asks.Count());
-        Assert.Equal(2, marketDepth.Bids.Count());
-        Assert.Equal(50000m, marketDepth.BestAsk.Price);
-        Assert.Equal(49900m, marketDepth.BestBid.Price);
+        await Assert.That(marketDepth.Symbol.ContractType).IsEqualTo(ContractType.Futures);
+        await Assert.That(marketDepth.LastUpdateId).IsEqualTo(123456);
+        await Assert.That(marketDepth.Asks.Count()).IsEqualTo(2);
+        await Assert.That(marketDepth.Bids.Count()).IsEqualTo(2);
+        await Assert.That(marketDepth.BestAsk.Price).IsEqualTo(50000m);
+        await Assert.That(marketDepth.BestBid.Price).IsEqualTo(49900m);
     }
 
-    [Fact]
-    public void UpdateDepth_WithOldUpdateTime_IgnoresUpdate()
+    [Test]
+    public async Task UpdateDepth_WithOldUpdateTime_IgnoresUpdate()
     {
         // Arrange
         var marketDepth = CreateTestMarketDepth();
@@ -114,12 +115,12 @@ public class MarketDepthTests
         marketDepth.UpdateDepth(newAsks, bids, 123400);
 
         // Assert - should still have old data
-        Assert.Equal(123456, marketDepth.LastUpdateId);
-        Assert.Equal(50000m, marketDepth.BestAsk.Price);
+        await Assert.That(marketDepth.LastUpdateId).IsEqualTo(123456);
+        await Assert.That(marketDepth.BestAsk.Price).IsEqualTo(50000m);
     }
 
-    [Fact]
-    public void UpdateDepth_RemovesPriceLevelWithZeroQuantity()
+    [Test]
+    public async Task UpdateDepth_RemovesPriceLevelWithZeroQuantity()
     {
         // Arrange
         var marketDepth = CreateTestMarketDepth();
@@ -142,22 +143,22 @@ public class MarketDepthTests
         marketDepth.UpdateDepth(updateAsks, bids, 123457);
 
         // Assert
-        Assert.Single(marketDepth.Asks);
-        Assert.Equal(50100m, marketDepth.BestAsk.Price);
+        await Assert.That(marketDepth.Asks.Count()).IsEqualTo(1);
+        await Assert.That(marketDepth.BestAsk.Price).IsEqualTo(50100m);
     }
 
-    [Fact]
-    public void BestPair_WhenOrderBookIsEmpty_ReturnsNull()
+    [Test]
+    public async Task BestPair_WhenOrderBookIsEmpty_ReturnsNull()
     {
         // Arrange
         var marketDepth = CreateTestMarketDepth();
 
         // Act & Assert
-        Assert.Null(marketDepth.BestPair);
+        await Assert.That(marketDepth.BestPair).IsNull();
     }
 
-    [Fact]
-    public void BestPair_WhenOrderBookHasData_ReturnsPair()
+    [Test]
+    public async Task BestPair_WhenOrderBookHasData_ReturnsPair()
     {
         // Arrange
         var marketDepth = CreateTestMarketDepth();
@@ -175,14 +176,14 @@ public class MarketDepthTests
         var bestPair = marketDepth.BestPair;
 
         // Assert
-        Assert.NotNull(bestPair);
-        Assert.Equal(50000m, bestPair.Ask.Price);
-        Assert.Equal(49900m, bestPair.Bid.Price);
-        Assert.Equal(100m, bestPair.PriceSpread);
+        await Assert.That(bestPair).IsNotNull();
+        await Assert.That(bestPair!.Ask.Price).IsEqualTo(50000m);
+        await Assert.That(bestPair.Bid.Price).IsEqualTo(49900m);
+        await Assert.That(bestPair.PriceSpread).IsEqualTo(100m);
     }
 
-    [Fact]
-    public void BestPair_WhenOrderBookHasData_ReturnsPair_Perpetual()
+    [Test]
+    public async Task BestPair_WhenOrderBookHasData_ReturnsPair_Perpetual()
     {
         // Arrange
         var marketDepth = CreateTestMarketDepthPerpetual();
@@ -200,15 +201,15 @@ public class MarketDepthTests
         var bestPair = marketDepth.BestPair;
 
         // Assert
-        Assert.NotNull(bestPair);
-        Assert.Equal(50000m, bestPair.Ask.Price);
-        Assert.Equal(49900m, bestPair.Bid.Price);
-        Assert.Equal(100m, bestPair.PriceSpread);
-        Assert.Equal(ContractType.Futures, marketDepth.Symbol.ContractType);
+        await Assert.That(bestPair).IsNotNull();
+        await Assert.That(bestPair!.Ask.Price).IsEqualTo(50000m);
+        await Assert.That(bestPair.Bid.Price).IsEqualTo(49900m);
+        await Assert.That(bestPair.PriceSpread).IsEqualTo(100m);
+        await Assert.That(marketDepth.Symbol.ContractType).IsEqualTo(ContractType.Futures);
     }
 
-    [Fact]
-    public void MarketDepthChanged_RaisesEvent_WhenDepthUpdated()
+    [Test]
+    public async Task MarketDepthChanged_RaisesEvent_WhenDepthUpdated()
     {
         // Arrange
         var marketDepth = CreateTestMarketDepth();
@@ -228,13 +229,13 @@ public class MarketDepthTests
         marketDepth.UpdateDepth(asks, bids, 123456);
 
         // Assert
-        Assert.NotNull(eventArgs);
-        Assert.Equal(123456, eventArgs.UpdateTime);
-        Assert.Single(eventArgs.Asks);
+        await Assert.That(eventArgs).IsNotNull();
+        await Assert.That(eventArgs!.UpdateTime).IsEqualTo(123456);
+        await Assert.That(eventArgs.Asks.Count()).IsEqualTo(1);
     }
 
-    [Fact]
-    public void MarketBestPairChanged_RaisesEvent_WhenBestPairChanges()
+    [Test]
+    public async Task MarketBestPairChanged_RaisesEvent_WhenBestPairChanges()
     {
         // Arrange
         var marketDepth = CreateTestMarketDepth();
@@ -254,11 +255,11 @@ public class MarketDepthTests
         marketDepth.UpdateDepth(asks, bids, 123456);
 
         // Assert
-        Assert.True(eventRaised);
+        await Assert.That(eventRaised).IsTrue();
     }
 
-    [Fact]
-    public void Asks_AreSortedAscending()
+    [Test]
+    public async Task Asks_AreSortedAscending()
     {
         // Arrange
         var marketDepth = CreateTestMarketDepth();
@@ -278,11 +279,11 @@ public class MarketDepthTests
 
         // Assert
         var askPrices = marketDepth.Asks.Select(a => a.Price).ToList();
-        Assert.Equal(new[] { 50000m, 50100m, 50200m }, askPrices);
+        await Assert.That(askPrices).IsEquivalentTo(new[] { 50000m, 50100m, 50200m });
     }
 
-    [Fact]
-    public void Bids_AreSortedDescending()
+    [Test]
+    public async Task Bids_AreSortedDescending()
     {
         // Arrange
         var marketDepth = CreateTestMarketDepth();
@@ -302,11 +303,11 @@ public class MarketDepthTests
 
         // Assert
         var bidPrices = marketDepth.Bids.Select(b => b.Price).ToList();
-        Assert.Equal(new[] { 49900m, 49800m, 49700m }, bidPrices);
+        await Assert.That(bidPrices).IsEquivalentTo(new[] { 49900m, 49800m, 49700m });
     }
 
-    [Fact]
-    public void UpdateDepth_WithZeroOrNegativeUpdateTime_ThrowsArgumentOutOfRangeException()
+    [Test]
+    public async Task UpdateDepth_WithZeroOrNegativeUpdateTime_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
         var marketDepth = CreateTestMarketDepth();
@@ -316,7 +317,9 @@ public class MarketDepthTests
         };
 
         // Act & Assert
-        Assert.Throws<ArgumentOutOfRangeException>(() => marketDepth.UpdateDepth(asks, null, 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => marketDepth.UpdateDepth(asks, null, -1));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => 
+            Task.Run(() => marketDepth.UpdateDepth(asks, null, 0)));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => 
+            Task.Run(() => marketDepth.UpdateDepth(asks, null, -1)));
     }
 }
