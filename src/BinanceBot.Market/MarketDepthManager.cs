@@ -163,25 +163,7 @@ public class MarketDepthManager
         {
             _logger.Warn($"Snapshot too old: LastUpdateId={snapshot.LastUpdateId} < FirstEvent.U={firstEvent.FirstUpdateId}. Retrying...");
             // Snapshot is too old, need to get a new one
-            switch (marketDepth.Symbol.ContractType)
-            {
-                case ContractType.Spot:
-                    WebCallResult<BinanceOrderBook> spotResponse = await _restClient.SpotApi.ExchangeData.GetOrderBookAsync(
-                        marketDepth.Symbol.FullName, orderBookDepth, ct)
-                    .ConfigureAwait(false);
-    
-                    response = (spotResponse.Success, spotResponse.Data, spotResponse.Error);
-                    break;
-                case ContractType.Futures:
-                    WebCallResult<BinanceFuturesOrderBook> futuresResponse = await _restClient.UsdFuturesApi.ExchangeData.GetOrderBookAsync(
-                        marketDepth.Symbol.FullName, orderBookDepth, ct)
-                    .ConfigureAwait(false);
-    
-                    response = (futuresResponse.Success, futuresResponse.Data, futuresResponse.Error);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(marketDepth.Symbol.ContractType), "Unknown contract type.");
-            }
+            response = await GetOrderBookSnapshotAsync(marketDepth.Symbol, orderBookDepth, ct).ConfigureAwait(false);
 
             if (!response.Success || response.Data == null)
                 throw new InvalidOperationException($"Failed to get order book snapshot: {response.Error?.Message}");
