@@ -328,7 +328,7 @@ public class MarketDepthManager
             return;
         }
         
-        // Check for missed updates. WARN: not worked for Futures API
+        // Check for missed updates. WARN: does not work for Futures API
         if (eventData.FirstUpdateId > _lastProcessedUpdateId + 1 && marketDepth.Symbol.ContractType == ContractType.Spot)
         {
             string errorMsg = $"Missed order book updates. Expected U <= {_lastProcessedUpdateId + 1}, got U={eventData.FirstUpdateId}";
