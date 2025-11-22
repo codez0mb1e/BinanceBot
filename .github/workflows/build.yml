@@ -41,15 +41,13 @@ jobs:
       run: dotnet --info
 
     - name: Restore dependencies
-      run: dotnet restore --verbosity minimal
-      working-directory: ./src
+      run: dotnet restore BinanceBot.sln --verbosity minimal
     
     - name: Build
-      run: dotnet build --no-restore --configuration ${{ matrix.configuration }} --nologo
-      working-directory: ./src
+      run: dotnet build BinanceBot.sln --no-restore --configuration ${{ matrix.configuration }} --nologo
     
     - name: Test
-      run: dotnet test --no-build --configuration ${{ matrix.configuration }} --collect:"XPlat Code Coverage" --logger "trx;LogFileName=test_results.trx"
+      run: dotnet test BinanceBot.sln --no-build --configuration ${{ matrix.configuration }} --collect:"XPlat Code Coverage" --logger "trx;LogFileName=test_results.trx"
 
     - name: Upload test results
       if: always()
@@ -72,15 +70,14 @@ jobs:
     - name: Publish artifacts (Release only)
       if: matrix.configuration == 'Release'
       run: |
-        dotnet publish BinanceBot.MarketBot.Console/BinanceBot.MarketBot.Console.csproj \
+        dotnet publish src/BinanceBot.MarketBot.Console/BinanceBot.MarketBot.Console.csproj \
           -c Release \
           -o ./publish/MarketBot \
           --no-build
-        dotnet publish BinanceBot.MarketViewer.Console/BinanceBot.MarketViewer.Console.csproj \
+        dotnet publish src/BinanceBot.MarketViewer.Console/BinanceBot.MarketViewer.Console.csproj \
           -c Release \
           -o ./publish/MarketViewer \
           --no-build
-      working-directory: ./src
 
     - name: Upload published artifacts
       if: matrix.configuration == 'Release'
@@ -88,6 +85,6 @@ jobs:
       with:
         name: binance-bot-binaries
         path: |
-          src/publish/MarketBot/
-          src/publish/MarketViewer/
+          publish/MarketBot/
+          publish/MarketViewer/
         retention-days: 7
