@@ -1,0 +1,16 @@
+{
+  "name": "Debug TUnit Test",
+  "type": "coreclr",
+  "request": "launch",
+  "preLaunchTask": "build",
+  "program": "dotnet",
+  "args": [
+    "exec",
+    "${workspaceFolder}/tests/BinanceBot.Market.Tests/bin/Debug/net9.0/BinanceBot.Market.Tests.dll",
+    "--treenode-filter",
+    "${command:csharp-test-filter.getFilter}"
+  ],
+  "cwd": "${workspaceFolder}",
+  "console": "integratedTerminal",
+  "stopAtEntry": false
+}
