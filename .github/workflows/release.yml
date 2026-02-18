@@ -84,7 +84,7 @@ jobs:
           PROJECT_NAME=${{ matrix.app.project }}
 
     - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@0.31.0
+      uses: aquasecurity/trivy-action@0.34.0
       with:
         image-ref: ghcr.io/${{ github.repository_owner }}/binancebot-${{ matrix.app.name }}:latest
         format: 'table'
